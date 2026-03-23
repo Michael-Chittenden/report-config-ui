@@ -343,7 +343,7 @@ export default function ManagerGroupsSection({
                 No candidate investments have been mapped to investments in this configuration's plans.
                 <br />
                 <span style={{ fontSize: 12 }}>
-                  Use the Demo Data admin to create candidates and map them to investments via the "Replaces" field.
+                  Use the Demo Data admin to create candidates and map them to investments via the "Compared Against" field.
                 </span>
               </div>
             ) : (

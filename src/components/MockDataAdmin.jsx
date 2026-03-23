@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Drawer, Tabs, Table, Button, Input, Select, Space, Tag, Popconfirm, Divider, message } from 'antd';
-import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { Drawer, Tabs, Table, Button, Input, Select, Space, Tag, Popconfirm, Divider, Switch, message } from 'antd';
+import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 
 const planTypes = ['DC', 'NQ', 'DB'];
 const vendors = ['Vanguard', 'Fidelity', 'TIAA', 'Schwab'];
@@ -35,6 +35,8 @@ export default function MockDataAdmin({
   allConfigs = [],
   allFundChanges = [],
   setAllFundChanges,
+  isTemplateAdmin = false,
+  setIsTemplateAdmin,
 }) {
   // --- Inline edit state ---
   const [editingClientId, setEditingClientId] = useState(null);
@@ -905,6 +907,41 @@ export default function MockDataAdmin({
       }}>
         This panel lets you add mock clients, plans, investments, and candidate managers for demo purposes.
         Changes persist in your browser. This would not exist in the production application.
+      </div>
+
+      {/* User Permission Toggle */}
+      <div style={{
+        background: isTemplateAdmin ? '#f0f5ff' : '#fafafa',
+        border: `1px solid ${isTemplateAdmin ? '#adc6ff' : '#d9d9d9'}`,
+        borderRadius: 6,
+        padding: '8px 12px',
+        marginBottom: 12,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <Space>
+          {isTemplateAdmin
+            ? <UnlockOutlined style={{ color: '#1677ff' }} />
+            : <LockOutlined style={{ color: '#8c8c8c' }} />
+          }
+          <span style={{ fontSize: 13 }}>
+            <strong>Shared Template Admin</strong>
+            <span style={{ color: '#8c8c8c', marginLeft: 8, fontSize: 12 }}>
+              {isTemplateAdmin
+                ? 'You can create, modify, and delete shared CAPTRUST report configs & exhibit templates'
+                : 'You can only use shared templates — save as client-specific to customize'
+              }
+            </span>
+          </span>
+        </Space>
+        <Switch
+          checked={isTemplateAdmin}
+          onChange={(checked) => setIsTemplateAdmin && setIsTemplateAdmin(checked)}
+          checkedChildren="On"
+          unCheckedChildren="Off"
+          size="small"
+        />
       </div>
 
       <Space style={{ marginBottom: 12 }}>

@@ -100,6 +100,18 @@ function App() {
 
   const [mockAdminOpen, setMockAdminOpen] = useState(false);
 
+  // Simulated user permission: can this user modify shared report configs & exhibit templates?
+  const TEMPLATE_ADMIN_KEY = 'irp-is-template-admin';
+  const [isTemplateAdmin, setIsTemplateAdmin] = useState(() => {
+    try {
+      const stored = localStorage.getItem(TEMPLATE_ADMIN_KEY);
+      return stored === 'true';
+    } catch (e) { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(TEMPLATE_ADMIN_KEY, String(isTemplateAdmin)); } catch (e) {}
+  }, [isTemplateAdmin]);
+
   // Client switcher (demo only — in production this comes from CRM context)
   const [selectedClientId, setSelectedClientId] = useState(() => allClients[0]?.accountId);
   const activeClient = useMemo(() => allClients.find(c => c.accountId === selectedClientId) || allClients[0], [selectedClientId, allClients]);
@@ -235,6 +247,24 @@ function App() {
   const [activeConfigName, setActiveConfigName] = useState(null);
   const [activeConfigIsPrimary, setActiveConfigIsPrimary] = useState(false);
 
+  // Persist plan-to-config assignments so loaded configs survive page reload
+  const PLAN_CONFIG_MAP_KEY = 'irp-plan-config-map-v1';
+  const [planConfigMap, setPlanConfigMap] = useState(() => {
+    try {
+      const stored = localStorage.getItem(PLAN_CONFIG_MAP_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch (e) { return {}; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(PLAN_CONFIG_MAP_KEY, JSON.stringify(planConfigMap)); } catch (e) {}
+  }, [planConfigMap]);
+
+  // Helper: remember which config was loaded/saved for a plan
+  const assignConfigToPlan = useCallback((planId, configId) => {
+    if (!planId || !configId) return;
+    setPlanConfigMap(prev => ({ ...prev, [planId]: configId }));
+  }, []);
+
   // Track the current primary config name for the selected plan
   const [primaryConfigName, setPrimaryConfigName] = useState(() => {
     try {
@@ -276,6 +306,10 @@ function App() {
   const handleLoadConfig = (config) => {
     const resolved = resolveReportConfig(config.ReportConfigID);
     loadConfigById(config);
+    // Persist plan-to-config assignment for single plan configs
+    if (configType === 'single' && selectedPlan) {
+      assignConfigToPlan(selectedPlan, config.ReportConfigID);
+    }
 
     // Always attach exhibit template info from the config record
     const templateName = getTemplateName(config.ExhibitTemplateID);
@@ -296,10 +330,18 @@ function App() {
       setLoadedConfig({
         ...resolved,
         ...templateInfo,
+        // Override resolved values with live config record (resolveReportConfig reads seed data,
+        // but the user may have saved changes that only exist in allConfigs/localStorage)
+        qdiaOptOut: config.QDIACheckOptOut ?? false,
+        includeCandidates: config.CandidateInvestments ?? false,
         includeFundChanges: config.IncludeFundChanges,
         optInAllFundChanges: config.OptInAllFundChanges,
         fundChangesInProgressChecks: config.FundChangesInProgress,
         fundChangesExecutedChecks: config.FundChangesExecuted,
+        includeInBulk: config.BulkRun ?? true,
+        bulkUnlocked: config.BulkTierOverrideID != null || config.BulkPctThresholdID != null,
+        bulkTierOverrideId: config.BulkTierOverrideID ?? null,
+        bulkPctThresholdId: config.BulkPctThresholdID ?? null,
         _planGroupId: config._planGroupId || null,
         _planGroupName: config._planGroupName || null,
         _planIds: config._planIds || null,
@@ -335,9 +377,18 @@ function App() {
     setLoadConfigOpen(false);
   };
 
-  const handleSaveConfig = ({ name, type, primary, isUpdate, isAdHoc, adHocPeriod, ExhibitTemplateID, BulkRun, BulkTierOverrideID, BulkPctThresholdID, QDIACheckOptOut, CandidateInvestments, IncludeFundChanges, OptInAllFundChanges, FundChangesInProgress, FundChangesExecuted, _planGroupId, _planGroupName, _planIds }) => {
+  const handleSaveConfig = ({ name, type, primary, isUpdate, isAdHoc, adHocPeriod, associationOnly, ExhibitTemplateID, BulkRun, BulkTierOverrideID, BulkPctThresholdID, QDIACheckOptOut, CandidateInvestments, IncludeFundChanges, OptInAllFundChanges, FundChangesInProgress, FundChangesExecuted, _planGroupId, _planGroupName, _planIds }) => {
     const configTypeId = type === 'CAPTRUST Shared' ? 1 : (configType === 'single' ? 1 : configType === 'multi' ? 2 : configType === 'combo' ? 3 : 4);
     const planId = configType === 'single' ? selectedPlan : null;
+
+    // Association only — just map plan to this config, don't modify the config record
+    if (associationOnly && activeConfigId) {
+      if (configType === 'single' && selectedPlan) {
+        assignConfigToPlan(selectedPlan, activeConfigId);
+      }
+      setActiveConfigName(name);
+      return;
+    }
 
     if (isUpdate && activeConfigId) {
       // Update existing config in-place — persist ALL config state
@@ -425,6 +476,15 @@ function App() {
         return [...updated, newConfig];
       });
       setActiveConfigId(newConfig.ReportConfigID);
+      // Persist plan-to-config assignment for new configs
+      if (configType === 'single' && selectedPlan) {
+        assignConfigToPlan(selectedPlan, newConfig.ReportConfigID);
+      }
+    }
+
+    // Persist plan-to-config assignment for existing config updates
+    if (isUpdate && activeConfigId && configType === 'single' && selectedPlan) {
+      assignConfigToPlan(selectedPlan, activeConfigId);
     }
 
     setActiveConfigName(name);
@@ -506,6 +566,10 @@ function App() {
         bulkPctThresholdId: primaryForPlan.BulkPctThresholdID,
         qdiaOptOut: primaryForPlan.QDIACheckOptOut,
         includeCandidates: primaryForPlan.CandidateInvestments,
+        includeFundChanges: primaryForPlan.IncludeFundChanges,
+        optInAllFundChanges: primaryForPlan.OptInAllFundChanges,
+        fundChangesInProgressChecks: primaryForPlan.FundChangesInProgress,
+        fundChangesExecutedChecks: primaryForPlan.FundChangesExecuted,
         exhibitTemplateName: templateName,
         exhibitTemplate: primaryForPlan.ExhibitTemplateID ? { ExhibitTemplateID: primaryForPlan.ExhibitTemplateID } : null,
         selectedExhibitIds: exhibitIds,
@@ -514,47 +578,89 @@ function App() {
       });
       setLoadCounter(prev => prev + 1);
     } else {
-      // No primary config — check if the plan has a default shared config mapped
-      const plan = allPlans.find(p => p.ct_PlanID === selectedPlan);
-      const defaultConfigId = plan?.defaultConfigId;
-      const defaultConfig = defaultConfigId ? allConfigs.find(c => c.ReportConfigID === defaultConfigId) : null;
+      // No primary — check for a previously assigned config (from manual load or save)
+      const assignedConfigId = planConfigMap[selectedPlan];
+      const assignedConfig = assignedConfigId ? allConfigs.find(c => c.ReportConfigID === assignedConfigId) : null;
 
-      if (defaultConfig) {
-        // Load the default shared config as a starter — but don't set it as "active" (it's a template, not saved for this plan yet)
-        setActiveConfigId(null);
-        setActiveConfigName(null);
+      // Also check for most recently saved client-specific config for this plan
+      const savedForPlan = allConfigs
+        .filter(c => c.ReportConfigType === 1 && c.ct_PlanID === selectedPlan && c.AccountID === activeClient.accountId && !c._isAdHoc)
+        .sort((a, b) => new Date(b.LastSaved) - new Date(a.LastSaved))[0];
+
+      // Prefer the assigned config (it was explicitly chosen), then saved, then default
+      const autoConfig = assignedConfig || savedForPlan;
+
+      if (autoConfig) {
+        setActiveConfigId(autoConfig.ReportConfigID);
+        setActiveConfigName(autoConfig.ReportConfigName);
         setActiveConfigIsPrimary(false);
         setPrimaryConfigName(null);
-        const templateName = getTemplateName(defaultConfig.ExhibitTemplateID);
-        const exhibitIds = getTemplateExhibitIds(defaultConfig.ExhibitTemplateID);
+        const templateName = getTemplateName(autoConfig.ExhibitTemplateID);
+        const exhibitIds = getTemplateExhibitIds(autoConfig.ExhibitTemplateID);
         setLoadedConfig({
           configType: 'single',
-          periodCode: defaultConfig.PeriodType === 1 ? 'Q' : 'M',
-          planId: selectedPlan,
-          includeInBulk: defaultConfig.BulkRun,
-          bulkUnlocked: defaultConfig.BulkTierOverrideID != null || defaultConfig.BulkPctThresholdID != null,
-          bulkTierOverrideId: defaultConfig.BulkTierOverrideID,
-          bulkPctThresholdId: defaultConfig.BulkPctThresholdID,
-          qdiaOptOut: defaultConfig.QDIACheckOptOut,
-          includeCandidates: defaultConfig.CandidateInvestments,
-          includeFundChanges: defaultConfig.IncludeFundChanges,
-          optInAllFundChanges: defaultConfig.OptInAllFundChanges,
-          fundChangesInProgressChecks: defaultConfig.FundChangesInProgress,
-          fundChangesExecutedChecks: defaultConfig.FundChangesExecuted,
+          periodCode: autoConfig.PeriodType === 1 ? 'Q' : 'M',
+          planId: autoConfig.ct_PlanID || selectedPlan,
+          includeInBulk: autoConfig.BulkRun,
+          bulkUnlocked: autoConfig.BulkTierOverrideID != null || autoConfig.BulkPctThresholdID != null,
+          bulkTierOverrideId: autoConfig.BulkTierOverrideID,
+          bulkPctThresholdId: autoConfig.BulkPctThresholdID,
+          qdiaOptOut: autoConfig.QDIACheckOptOut,
+          includeCandidates: autoConfig.CandidateInvestments,
+          includeFundChanges: autoConfig.IncludeFundChanges,
+          optInAllFundChanges: autoConfig.OptInAllFundChanges,
+          fundChangesInProgressChecks: autoConfig.FundChangesInProgress,
+          fundChangesExecutedChecks: autoConfig.FundChangesExecuted,
           exhibitTemplateName: templateName,
-          exhibitTemplate: defaultConfig.ExhibitTemplateID ? { ExhibitTemplateID: defaultConfig.ExhibitTemplateID } : null,
+          exhibitTemplate: autoConfig.ExhibitTemplateID ? { ExhibitTemplateID: autoConfig.ExhibitTemplateID } : null,
           selectedExhibitIds: exhibitIds,
           _autoLoad: true,
-          _defaultConfig: true,
-          _defaultConfigName: defaultConfig.ReportConfigName,
           _key: Date.now(),
         });
         setLoadCounter(prev => prev + 1);
       } else {
-        setActiveConfigId(null);
-        setActiveConfigName(null);
-        setActiveConfigIsPrimary(false);
-        setPrimaryConfigName(null);
+        // No saved or assigned config — check if the plan has a default shared config mapped
+        const plan = allPlans.find(p => p.ct_PlanID === selectedPlan);
+        const defaultConfigId = plan?.defaultConfigId;
+        const defaultConfig = defaultConfigId ? allConfigs.find(c => c.ReportConfigID === defaultConfigId) : null;
+
+        if (defaultConfig) {
+          // Load the default shared config as a starter — but don't set it as "active" (it's a template, not saved for this plan yet)
+          setActiveConfigId(null);
+          setActiveConfigName(null);
+          setActiveConfigIsPrimary(false);
+          setPrimaryConfigName(null);
+          const templateName = getTemplateName(defaultConfig.ExhibitTemplateID);
+          const exhibitIds = getTemplateExhibitIds(defaultConfig.ExhibitTemplateID);
+          setLoadedConfig({
+            configType: 'single',
+            periodCode: defaultConfig.PeriodType === 1 ? 'Q' : 'M',
+            planId: selectedPlan,
+            includeInBulk: defaultConfig.BulkRun,
+            bulkUnlocked: defaultConfig.BulkTierOverrideID != null || defaultConfig.BulkPctThresholdID != null,
+            bulkTierOverrideId: defaultConfig.BulkTierOverrideID,
+            bulkPctThresholdId: defaultConfig.BulkPctThresholdID,
+            qdiaOptOut: defaultConfig.QDIACheckOptOut,
+            includeCandidates: defaultConfig.CandidateInvestments,
+            includeFundChanges: defaultConfig.IncludeFundChanges,
+            optInAllFundChanges: defaultConfig.OptInAllFundChanges,
+            fundChangesInProgressChecks: defaultConfig.FundChangesInProgress,
+            fundChangesExecutedChecks: defaultConfig.FundChangesExecuted,
+            exhibitTemplateName: templateName,
+            exhibitTemplate: defaultConfig.ExhibitTemplateID ? { ExhibitTemplateID: defaultConfig.ExhibitTemplateID } : null,
+            selectedExhibitIds: exhibitIds,
+            _autoLoad: true,
+            _defaultConfig: true,
+            _defaultConfigName: defaultConfig.ReportConfigName,
+            _key: Date.now(),
+          });
+          setLoadCounter(prev => prev + 1);
+        } else {
+          setActiveConfigId(null);
+          setActiveConfigName(null);
+          setActiveConfigIsPrimary(false);
+          setPrimaryConfigName(null);
+        }
       }
     }
   }, [selectedPlan, configType]); // intentionally not including allConfigs to avoid re-triggering on save
@@ -825,6 +931,23 @@ function App() {
             planFundChanges={getFundChangesForPlan(selectedPlan)}
             planInvestments={investments.filter(inv => inv.ct_PlanID === selectedPlan)}
             allCandidates={candidates}
+            isTemplateAdmin={isTemplateAdmin}
+            allPlans={allPlans}
+            otherPlansUsingConfig={(() => {
+              if (!activeConfigId) return [];
+              // Find all plans in this client that use the same config (via planConfigMap, ct_PlanID, or defaultConfigId)
+              return clientPlans.filter(p => {
+                if (p.ct_PlanID === selectedPlan) return false; // exclude current plan
+                // Check planConfigMap
+                if (planConfigMap[p.ct_PlanID] === activeConfigId) return true;
+                // Check if the config's ct_PlanID matches this plan
+                const cfg = allConfigs.find(c => c.ReportConfigID === activeConfigId);
+                if (cfg && cfg.ct_PlanID === p.ct_PlanID) return true;
+                // Check if plan's defaultConfigId points to this config
+                if (p.defaultConfigId === activeConfigId) return true;
+                return false;
+              });
+            })()}
           />
         )}
 
@@ -854,6 +977,8 @@ function App() {
             allFundChanges={allFundChanges}
             allInvestments={investments}
             allCandidates={candidates}
+            isTemplateAdmin={isTemplateAdmin}
+            allPlans={allPlans}
           />
         )}
 
@@ -876,6 +1001,7 @@ function App() {
             onUpdateTemplate={handleUpdateTemplate}
             onRenameTemplate={handleRenameTemplate}
             onDeleteTemplate={handleDeleteTemplate}
+            isTemplateAdmin={isTemplateAdmin}
           />
         )}
 
@@ -927,6 +1053,8 @@ function App() {
         allConfigs={allConfigs}
         allFundChanges={allFundChanges}
         setAllFundChanges={setAllFundChanges}
+        isTemplateAdmin={isTemplateAdmin}
+        setIsTemplateAdmin={setIsTemplateAdmin}
       />
     </ConfigProvider>
   );

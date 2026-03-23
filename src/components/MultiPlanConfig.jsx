@@ -37,6 +37,8 @@ export default function MultiPlanConfig({
   allFundChanges = [],
   allInvestments = [],
   allCandidates = [],
+  isTemplateAdmin = false,
+  allPlans = [],
 }) {
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [availablePlans, setAvailablePlans] = useState([...plans]);
@@ -483,6 +485,7 @@ export default function MultiPlanConfig({
         clientAccountId={clientAccountId}
         includeIndividualSummaries={includeIndividualSummaries}
         setIncludeIndividualSummaries={setIncludeIndividualSummaries}
+        isTemplateAdmin={isTemplateAdmin}
       />
       <BulkRunSection
         includeInBulk={includeInBulk}
@@ -525,6 +528,8 @@ export default function MultiPlanConfig({
         activeConfigId={activeConfigId}
         savedConfigRecord={savedConfigRecord}
         allTemplates={allTemplates}
+        isTemplateAdmin={isTemplateAdmin}
+        allPlans={allPlans}
         liveState={{
           BulkRun: includeInBulk,
           BulkTierOverrideID: bulkUnlocked ? bulkTierOverrideId : null,

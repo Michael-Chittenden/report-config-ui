@@ -87,6 +87,9 @@ export default function SaveConfigSection({
   planGroupChanged = false,
   planGroupName,
   reportPlans = [],
+  isTemplateAdmin = false,
+  allPlans = [],
+  otherPlansUsingConfig = [],
 }) {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [runNowModalOpen, setRunNowModalOpen] = useState(false);
@@ -99,11 +102,23 @@ export default function SaveConfigSection({
   const [runAfterSave, setRunAfterSave] = useState(false);
   const [isSaveAs, setIsSaveAs] = useState(false);
 
-  // Mocked: in production this would come from user permissions
-  const canShareTemplates = true;
+  // Use the isTemplateAdmin prop from App.jsx (toggled via Demo Data admin)
+  const canShareTemplates = isTemplateAdmin;
 
   const hasActiveConfig = !!activeConfigId;
   const hasExhibitTemplate = !!(liveState && liveState.ExhibitTemplateID);
+
+  // Detect if the active config is a CAPTRUST-wide shared config (AccountID === null)
+  const isSharedConfig = savedConfigRecord && (savedConfigRecord.AccountID === null || savedConfigRecord.AccountID === undefined);
+  // Count how many plans use this shared config as their defaultConfigId
+  const sharedConfigPlanCount = useMemo(() => {
+    if (!isSharedConfig || !savedConfigRecord) return 0;
+    return allPlans.filter(p => p.defaultConfigId === savedConfigRecord.ReportConfigID).length;
+  }, [isSharedConfig, savedConfigRecord, allPlans]);
+
+  // Detect if a client-level config is used by other plans in the same client
+  const isClientSharedConfig = !isSharedConfig && otherPlansUsingConfig.length > 0;
+  const isMultiPlanConfig = isSharedConfig || isClientSharedConfig;
 
   const warnings = [];
   if (!hasExhibitTemplate) {
@@ -238,9 +253,9 @@ export default function SaveConfigSection({
                           </div>
                           {plan.fundChanges.inProgress.map((fc, i) => (
                             <div key={fc.id || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
-                              <span style={{ color: '#ff4d4f' }}>{fc.currentFund}</span>
+                              <span style={{ color: '#ff4d4f' }}>{fc.currentInvestment || fc.currentFund}</span>
                               <span style={{ color: '#8c8c8c' }}>→</span>
-                              <span style={{ color: '#52c41a' }}>{fc.replacementFund}</span>
+                              <span style={{ color: '#52c41a' }}>{fc.replacementInvestment || fc.replacementFund}</span>
                               <span style={{ color: '#8c8c8c', fontSize: 10 }}>({fc.percentage}%)</span>
                             </div>
                           ))}
@@ -253,9 +268,9 @@ export default function SaveConfigSection({
                           </div>
                           {plan.fundChanges.executed.map((fc, i) => (
                             <div key={fc.id || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
-                              <span style={{ color: '#ff4d4f' }}>{fc.currentFund}</span>
+                              <span style={{ color: '#ff4d4f' }}>{fc.currentInvestment || fc.currentFund}</span>
                               <span style={{ color: '#8c8c8c' }}>→</span>
-                              <span style={{ color: '#52c41a' }}>{fc.replacementFund}</span>
+                              <span style={{ color: '#52c41a' }}>{fc.replacementInvestment || fc.replacementFund}</span>
                               <span style={{ color: '#8c8c8c', fontSize: 10 }}>({fc.percentage}%)</span>
                             </div>
                           ))}
@@ -318,6 +333,27 @@ export default function SaveConfigSection({
     setConfirmModalOpen(true);
   };
 
+  // Save association only — maps this plan to the shared config without modifying config settings
+  const confirmSaveAssociationOnly = () => {
+    setSaving(true);
+    setTimeout(() => {
+      setSaving(false);
+      setConfirmModalOpen(false);
+      if (onSaveConfig) {
+        onSaveConfig({
+          name: activeConfigName,
+          type: `Client ${configType === 'single' ? 'Single' : configType === 'multi' ? 'Multi' : 'Combo'} Plan`,
+          primary: false,
+          shared: false,
+          isUpdate: false,
+          associationOnly: true,
+        });
+      }
+      message.success(`Plan associated with "${activeConfigName}"`);
+    }, 500);
+  };
+
+  // Full save — update the config with current settings
   const confirmQuickSave = () => {
     setSaving(true);
     setTimeout(() => {
@@ -467,13 +503,47 @@ export default function SaveConfigSection({
 
       {/* Confirm Save Modal — shows diff of changes */}
       <Modal
-        title={`Save "${activeConfigName}"?`}
+        title={isSharedConfig
+          ? `Associate "${activeConfigName}"`
+          : isClientSharedConfig
+            ? `Save "${activeConfigName}"?`
+            : `Save "${activeConfigName}"?`}
         open={confirmModalOpen}
         onCancel={() => setConfirmModalOpen(false)}
-        onOk={confirmQuickSave}
-        okText={saving ? 'Saving...' : 'Save Changes'}
-        confirmLoading={saving}
-        width={500}
+        width={540}
+        footer={isSharedConfig ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <Button onClick={() => setConfirmModalOpen(false)}>Cancel</Button>
+            <Space>
+              <Button
+                type="primary"
+                loading={saving}
+                onClick={confirmSaveAssociationOnly}
+                icon={<CheckCircleOutlined />}
+              >
+                Save Association
+              </Button>
+              {isTemplateAdmin && changes.length > 0 && (
+                <Button
+                  type="primary"
+                  danger
+                  loading={saving}
+                  onClick={confirmQuickSave}
+                  icon={<SaveOutlined />}
+                >
+                  Save Association & Update Config
+                </Button>
+              )}
+            </Space>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button onClick={() => setConfirmModalOpen(false)}>Cancel</Button>
+            <Button type="primary" loading={saving} onClick={confirmQuickSave}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        )}
       >
         {savedConfigRecord?.Primary && (
           <Alert
@@ -491,6 +561,103 @@ export default function SaveConfigSection({
               </span>
             }
           />
+        )}
+
+        {isSharedConfig && (
+          <Alert
+            type="info"
+            showIcon
+            icon={<ShareAltOutlined style={{ color: '#1677ff' }} />}
+            style={{ marginBottom: 16, border: '1px solid #91caff' }}
+            message={
+              <span>
+                <strong>"{activeConfigName}"</strong> is a shared CAPTRUST report configuration.
+                <br />
+                {sharedConfigPlanCount > 0 ? (
+                  <span style={{ fontSize: 12, color: '#595959' }}>
+                    Currently used as the default for <strong>{sharedConfigPlanCount}</strong> plan{sharedConfigPlanCount !== 1 ? 's' : ''} across all clients.
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 12, color: '#8c8c8c' }}>
+                    This is a shared template available to all CAPTRUST advisors.
+                  </span>
+                )}
+              </span>
+            }
+          />
+        )}
+
+        {isClientSharedConfig && (
+          <Alert
+            type="warning"
+            showIcon
+            icon={<TeamOutlined style={{ color: '#fa8c16' }} />}
+            style={{ marginBottom: 16, border: '1px solid #ffd591' }}
+            message={
+              <span>
+                <strong>This configuration is also used by {otherPlansUsingConfig.length} other plan{otherPlansUsingConfig.length !== 1 ? 's' : ''} in this client.</strong>
+                <br />
+                <span style={{ fontSize: 12, color: '#595959' }}>
+                  {otherPlansUsingConfig.length <= 5
+                    ? <>Plans: {otherPlansUsingConfig.map(p => p.name).join(', ')}. </>
+                    : null
+                  }
+                  Saving changes will update the configuration for all plans using it.
+                </span>
+              </span>
+            }
+          />
+        )}
+
+        {/* For CAPTRUST shared configs, explain the two save options */}
+        {isSharedConfig && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{
+              background: '#f6ffed',
+              border: '1px solid #b7eb8f',
+              borderRadius: 6,
+              padding: '10px 14px',
+              marginBottom: 8,
+            }}>
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>
+                <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 6 }} />
+                Save Association
+              </div>
+              <div style={{ fontSize: 12, color: '#595959', marginLeft: 20 }}>
+                Links this plan to the shared configuration. The shared template itself will not be modified.
+              </div>
+            </div>
+            {isTemplateAdmin && changes.length > 0 && (
+              <div style={{
+                background: '#fff2f0',
+                border: '1px solid #ffccc7',
+                borderRadius: 6,
+                padding: '10px 14px',
+              }}>
+                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>
+                  <SaveOutlined style={{ color: '#ff4d4f', marginRight: 6 }} />
+                  Save Association & Update Config
+                </div>
+                <div style={{ fontSize: 12, color: '#595959', marginLeft: 20 }}>
+                  Links this plan AND saves your changes to the shared template. This will affect all plans using this configuration.
+                </div>
+              </div>
+            )}
+            {!isTemplateAdmin && changes.length > 0 && (
+              <div style={{
+                background: '#fffbe6',
+                border: '1px solid #ffe58f',
+                borderRadius: 6,
+                padding: '10px 14px',
+              }}>
+                <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+                  <LockOutlined style={{ marginRight: 6 }} />
+                  You have made changes to this configuration, but only template administrators can update shared configs.
+                  Use <strong>"Save As New Report Config"</strong> to save a client-specific copy with your changes.
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {planGroupChanged && (
@@ -515,7 +682,9 @@ export default function SaveConfigSection({
         {changes.length > 0 ? (
           <>
             <p style={{ color: '#595959', marginBottom: 12, fontSize: 13 }}>
-              The following changes will be saved:
+              {isSharedConfig
+                ? 'The following changes have been made to the configuration:'
+                : 'The following changes will be saved:'}
             </p>
             <div style={{
               background: '#fafafa',
@@ -544,7 +713,7 @@ export default function SaveConfigSection({
         ) : (
           <div style={{ textAlign: 'center', padding: 20, color: '#8c8c8c' }}>
             <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a', marginBottom: 8 }} />
-            <div>No changes detected. Save anyway to update the timestamp?</div>
+            <div>{isSharedConfig ? 'No changes to the shared configuration. Save the association to link this plan.' : 'No changes detected. Save anyway to update the timestamp?'}</div>
           </div>
         )}
       </Modal>

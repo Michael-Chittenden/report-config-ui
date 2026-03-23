@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Select, Button, Modal, Table, Tag, Divider, Space, Input, Popconfirm, Checkbox, Alert, message } from 'antd';
-import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined } from '@ant-design/icons';
+import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined, LockOutlined } from '@ant-design/icons';
 import { pagesets, pagesetCategories, exhibitMenuTypes, exhibitTemplateConfigs as seedTemplates } from '../data/mockData';
 import { resolveExhibitPageSetIds, resolveExhibitIds } from '../data/dataResolvers';
 import DualListBox from './DualListBox';
@@ -38,6 +38,8 @@ export default function ExhibitMenuSection({
   // Multi plan only — individual summaries checkbox
   includeIndividualSummaries,
   setIncludeIndividualSummaries,
+  // Permission: can this user modify shared templates?
+  isTemplateAdmin = false,
 }) {
   const [expanded, setExpanded] = useState(false);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
@@ -49,6 +51,10 @@ export default function ExhibitMenuSection({
   const [sharedConfirmAction, setSharedConfirmAction] = useState(null); // { type: 'update' | 'delete', templateId, templateName, configCount }
   const [detachConfirmOpen, setDetachConfirmOpen] = useState(false);
   const [pendingDetachAction, setPendingDetachAction] = useState(null); // { type: 'load' | 'saveNew', payload }
+  const [permissionDeniedOpen, setPermissionDeniedOpen] = useState(false);
+
+  // Use the isTemplateAdmin prop from App.jsx (toggled via Demo Data admin)
+  const canModifySharedTemplates = isTemplateAdmin;
 
   // Resolve IDs to full exhibit objects
   const selectedExhibits = useMemo(() => resolveExhibitIds(selectedExhibitIds), [selectedExhibitIds]);
@@ -194,11 +200,15 @@ export default function ExhibitMenuSection({
     return { isShared, configCount, templateName: tmpl.Name };
   };
 
-  // Update existing template in-place — with shared template confirmation
+  // Update existing template in-place — with shared template confirmation & permission check
   const handleUpdateExistingTemplate = () => {
     if (!exhibitTemplateId) return;
     const { isShared, configCount, templateName } = getSharedTemplateInfo(exhibitTemplateId);
     if (isShared) {
+      if (!canModifySharedTemplates) {
+        setPermissionDeniedOpen(true);
+        return;
+      }
       setSharedConfirmAction({ type: 'update', templateId: exhibitTemplateId, templateName, configCount });
       setSharedConfirmOpen(true);
       return;
@@ -244,6 +254,10 @@ export default function ExhibitMenuSection({
   const handleDeleteTemplateClick = (templateId) => {
     const { isShared, configCount, templateName } = getSharedTemplateInfo(templateId);
     if (isShared) {
+      if (!canModifySharedTemplates) {
+        setPermissionDeniedOpen(true);
+        return;
+      }
       setSharedConfirmAction({ type: 'delete', templateId, templateName, configCount });
       setSharedConfirmOpen(true);
       return;
@@ -528,17 +542,26 @@ export default function ExhibitMenuSection({
               {exhibitTemplateId ? 'Save As New' : 'Save'}
             </Button>
             <div style={{ borderLeft: '1px solid #d9d9d9', height: 20 }} />
-            <Checkbox
-              checked={saveAsShared}
-              onChange={(e) => setSaveAsShared(e.target.checked)}
-            >
-              <Space size={4}>
-                <ShareAltOutlined style={{ color: saveAsShared ? '#722ed1' : '#8c8c8c' }} />
-                <span style={{ fontSize: 12, color: saveAsShared ? '#722ed1' : '#8c8c8c' }}>
-                  Share as CAPTRUST Template
+            {canModifySharedTemplates ? (
+              <Checkbox
+                checked={saveAsShared}
+                onChange={(e) => setSaveAsShared(e.target.checked)}
+              >
+                <Space size={4}>
+                  <ShareAltOutlined style={{ color: saveAsShared ? '#722ed1' : '#8c8c8c' }} />
+                  <span style={{ fontSize: 12, color: saveAsShared ? '#722ed1' : '#8c8c8c' }}>
+                    Share as CAPTRUST Template
+                  </span>
+                </Space>
+              </Checkbox>
+            ) : (
+              <Space size={4} style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                <LockOutlined style={{ color: '#8c8c8c', fontSize: 12 }} />
+                <span style={{ fontSize: 12, color: '#8c8c8c' }}>
+                  Share as CAPTRUST Template — requires template admin permissions
                 </span>
               </Space>
-            </Checkbox>
+            )}
           </div>
 
           {/* Load Template Modal */}
@@ -650,6 +673,44 @@ export default function ExhibitMenuSection({
                 </p>
               </div>
             )}
+          </Modal>
+
+          {/* Permission Denied Modal — non-provisioned users cannot modify shared templates */}
+          <Modal
+            title={
+              <Space>
+                <WarningOutlined style={{ color: '#fa541c', fontSize: 18 }} />
+                <span>Permission Required</span>
+              </Space>
+            }
+            open={permissionDeniedOpen}
+            onCancel={() => setPermissionDeniedOpen(false)}
+            footer={[
+              <Button key="ok" type="primary" onClick={() => setPermissionDeniedOpen(false)}>
+                OK
+              </Button>,
+            ]}
+            width={480}
+          >
+            <p style={{ fontSize: 14, marginBottom: 12 }}>
+              You do not have permission to modify shared CAPTRUST exhibit templates.
+            </p>
+            <div style={{
+              background: '#fff2e8',
+              border: '1px solid #ffbb96',
+              borderRadius: 6,
+              padding: '12px 16px',
+              marginBottom: 16,
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 6, color: '#ad2102' }}>
+                Only provisioned template administrators can update or delete shared templates.
+              </div>
+              <div style={{ fontSize: 13, color: '#595959' }}>
+                To customize your exhibit selections, save a new client-specific template using the
+                <strong> "Save As New"</strong> option below the exhibit list. This will create a template
+                specific to this client that you can freely modify.
+              </div>
+            </div>
           </Modal>
 
           {/* Detach from Shared Template Confirmation */}

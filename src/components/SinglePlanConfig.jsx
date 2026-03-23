@@ -15,7 +15,7 @@ const emptyManagerGroups = [
   { id: 'group-default-3', name: 'Group 3', customName: 'Core Equity', managers: [] },
 ];
 
-export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveConfig, currentPrimaryName, activeConfigName, activeConfigId, savedConfigRecord, allTemplates, allConfigs, onSaveTemplate, onUpdateTemplate, onRenameTemplate, onDeleteTemplate, clientAccountId, planFundChanges, planInvestments = [], allCandidates = [] }) {
+export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveConfig, currentPrimaryName, activeConfigName, activeConfigId, savedConfigRecord, allTemplates, allConfigs, onSaveTemplate, onUpdateTemplate, onRenameTemplate, onDeleteTemplate, clientAccountId, planFundChanges, planInvestments = [], allCandidates = [], isTemplateAdmin = false, allPlans = [], otherPlansUsingConfig = [] }) {
   // --- All config state lives here ---
   const [qdiaOptOut, setQdiaOptOut] = useState(false);
 
@@ -164,6 +164,7 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
         onRenameTemplate={onRenameTemplate}
         onDeleteTemplate={onDeleteTemplate}
         clientAccountId={clientAccountId}
+        isTemplateAdmin={isTemplateAdmin}
       />
 
       <BulkRunSection
@@ -199,6 +200,9 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
         activeConfigId={activeConfigId}
         savedConfigRecord={savedConfigRecord}
         allTemplates={allTemplates}
+        isTemplateAdmin={isTemplateAdmin}
+        allPlans={allPlans}
+        otherPlansUsingConfig={otherPlansUsingConfig}
         liveState={{
           BulkRun: includeInBulk,
           BulkTierOverrideID: bulkUnlocked ? bulkTierOverrideId : null,
