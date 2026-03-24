@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { ConfigProvider, Select, Button, Space, Tag, message } from 'antd';
-import { SettingOutlined, StarFilled, FileTextOutlined, TeamOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { SettingOutlined, StarFilled, FileTextOutlined, TeamOutlined, ExperimentOutlined, ShareAltOutlined } from '@ant-design/icons';
 import { allClients as seedClients, allPlans as seedPlans, reportConfigs as seedConfigs, exhibitTemplateConfigs as seedTemplates, savedPlanGroups as seedPlanGroups, fundChangesInProgress, fundChangesExecuted, seedInvestments } from './data/mockData';
 import { resolveReportConfig, resolveExhibitPageSetIds } from './data/dataResolvers';
 import ConfigTypeSelector from './components/ConfigTypeSelector';
@@ -377,7 +377,7 @@ function App() {
     setLoadConfigOpen(false);
   };
 
-  const handleSaveConfig = ({ name, type, primary, isUpdate, isAdHoc, adHocPeriod, associationOnly, ExhibitTemplateID, BulkRun, BulkTierOverrideID, BulkPctThresholdID, QDIACheckOptOut, CandidateInvestments, IncludeFundChanges, OptInAllFundChanges, FundChangesInProgress, FundChangesExecuted, _planGroupId, _planGroupName, _planIds }) => {
+  const handleSaveConfig = ({ name, type, primary, shared, isUpdate, isAdHoc, adHocPeriod, associationOnly, ExhibitTemplateID, BulkRun, BulkTierOverrideID, BulkPctThresholdID, QDIACheckOptOut, CandidateInvestments, IncludeFundChanges, OptInAllFundChanges, FundChangesInProgress, FundChangesExecuted, _planGroupId, _planGroupName, _planIds }) => {
     const configTypeId = type === 'CAPTRUST Shared' ? 1 : (configType === 'single' ? 1 : configType === 'multi' ? 2 : configType === 'combo' ? 3 : 4);
     const planId = configType === 'single' ? selectedPlan : null;
 
@@ -441,7 +441,7 @@ function App() {
         LastSaved: new Date().toISOString(),
         UserID: 'you',
         PeriodType: period === 'Q' ? 1 : 2,
-        AccountID: activeClient.accountId,
+        AccountID: shared ? null : activeClient.accountId,
         BulkTierOverrideID: BulkTierOverrideID ?? null,
         BulkPctThresholdID: BulkPctThresholdID ?? null,
         QDIACheckOptOut: QDIACheckOptOut ?? false,
@@ -452,7 +452,7 @@ function App() {
         FundChangesExecuted: FundChangesExecuted ?? null,
         ParentReportConfigID: isAdHoc ? activeConfigId : null,
         ExhibitTemplateID: ExhibitTemplateID || null,
-        ct_PlanID: planId,
+        ct_PlanID: shared ? null : planId,
         _displayType: type,
         _savedBy: 'You',
         _isAdHoc: isAdHoc || false,
@@ -803,8 +803,8 @@ function App() {
             <label>&nbsp;</label>
             <Button
               onClick={() => setLoadConfigOpen(true)}
-              disabled={configType === 'single' && !selectedPlan}
-              title={configType === 'single' && !selectedPlan ? 'Select a plan first' : undefined}
+              disabled={!configType || (configType === 'single' && !selectedPlan)}
+              title={!configType ? 'Select a report configuration type first' : (configType === 'single' && !selectedPlan ? 'Select a plan first' : undefined)}
             >
               Load Saved Report Config
             </Button>
@@ -828,6 +828,15 @@ function App() {
               <FileTextOutlined style={{ color: '#1677ff' }} />
               <span style={{ fontSize: 13, color: '#8c8c8c' }}>Report Config:</span>
               <strong style={{ fontSize: 14 }}>{activeConfigName}</strong>
+              {(() => {
+                const cfg = activeConfigId ? allConfigs.find(c => c.ReportConfigID === activeConfigId) : null;
+                return cfg && (cfg.AccountID === null || cfg.AccountID === undefined) ? (
+                  <Tag color="purple" style={{ fontSize: 11 }}>
+                    <ShareAltOutlined style={{ marginRight: 4 }} />
+                    Shared
+                  </Tag>
+                ) : null;
+              })()}
               {activeConfigIsPrimary && (
                 <Tag color="gold" style={{ fontSize: 11 }}>
                   <StarFilled style={{ marginRight: 4 }} />

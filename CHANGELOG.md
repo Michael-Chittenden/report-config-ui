@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] — 2026-03-24
+
+### Shared Config & Permission Enhancements
+
+**Shared Config Impact Warnings**
+- CAPTRUST-wide shared configs show plan count impact in save confirm modal
+- Client-level configs used by multiple plans show impact warning with affected plan names
+- Impact warnings display for both single and multi plan config types
+
+**Permission Model**
+- Template admin toggle in Demo Data admin drawer (persisted in localStorage)
+- Non-admin users blocked from modifying shared CAPTRUST configs — directed to "Save As New"
+- Non-admin users blocked from modifying shared exhibit templates — Permission Required modal
+- Admin users see two save options: "Save Association" (link only) or "Save Association & Update Config"
+
+**Config Association Flow**
+- Users can associate any plan to a shared config without admin permissions
+- planConfigMap persistence ensures config assignments survive page reload
+- 4-tier auto-load fallback: Primary → assigned → most recent client → defaultConfigId
+
+**Load Config Modal**
+- Ad hoc configs hidden by default with toggle to show/hide
+- "Load Saved Report Config" button disabled until config type is selected
+
+**UI Improvements**
+- Combined "Report configuration and exhibit template loaded" toast (single message)
+- React StrictMode double-toast fix using ref dedup guard
+- Shared exhibit template indicator ("Shared" tag) in Exhibit Menu header
+
+**Terminology Updates**
+- "Replaces" → "Compared Against" for candidate investments
+- "Current Fund" → "Current Investment" and "Replacement Fund" → "Replacement Investment"
+
+**Documentation**
+- IRP-Database-Schema.docx — full SQL DDL with schema specification
+- IRP-Developer-Guide.docx — architecture, technology stack, component guide, setup instructions
+
+---
+
 ## [1.0.0] — 2026-03-20
 
 ### Initial Release

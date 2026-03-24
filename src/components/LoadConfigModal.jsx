@@ -1,4 +1,4 @@
-import { Modal, Table, Tag, Button, Input, Tooltip, Popconfirm, Divider, message } from 'antd';
+import { Modal, Table, Tag, Button, Input, Tooltip, Popconfirm, Divider, Switch, message } from 'antd';
 import { SearchOutlined, StarFilled, BranchesOutlined, EditOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, ShareAltOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { reportConfigTypes } from '../data/mockData';
@@ -19,6 +19,7 @@ const configTypeToDbType = { single: 1, multi: 2, combo: 3, clientOnly: 4 };
 
 export default function LoadConfigModal({ open, onClose, onSelect, configs = [], plans = [], onRenameConfig, onDeleteConfig, activeConfigType, selectedPlanId, clientAccountId }) {
   const [search, setSearch] = useState('');
+  const [showAdHoc, setShowAdHoc] = useState(false);
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
 
@@ -56,9 +57,11 @@ export default function LoadConfigModal({ open, onClose, onSelect, configs = [],
 
   // Build display rows — filtered to matching config type, showing all configs for the client
   const dbType = activeConfigType ? configTypeToDbType[activeConfigType] : null;
+  const adHocCount = configs.filter(c => c.AccountID === clientAccountId && c._isAdHoc && (dbType ? c.ReportConfigType === dbType : true)).length;
   const clientConfigs = configs
     .filter(c => c.AccountID === clientAccountId)
     .filter(c => dbType ? c.ReportConfigType === dbType : true)
+    .filter(c => showAdHoc || !c._isAdHoc)
     .map(c => ({
       ...c,
       _savedBy: c._savedBy || resolveUserName(c.UserID),
@@ -118,6 +121,12 @@ export default function LoadConfigModal({ open, onClose, onSelect, configs = [],
             <div style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <strong>{text}</strong>
+                {(record.AccountID === null || record.AccountID === undefined) && (
+                  <Tag color="purple" style={{ fontSize: 10 }}>
+                    <ShareAltOutlined style={{ marginRight: 2 }} />
+                    Shared
+                  </Tag>
+                )}
                 {record._isAdHoc && (
                   <Tag color="orange" style={{ fontSize: 10 }}>
                     <ThunderboltOutlined style={{ marginRight: 2 }} />
@@ -276,14 +285,25 @@ export default function LoadConfigModal({ open, onClose, onSelect, configs = [],
           ? `Showing ${typeLabel.toLowerCase()} configs for this client. Select a configuration type first to filter by type.`
           : 'Select a configuration type first, then load a matching saved configuration.'}
       </p>
-      <Input
-        prefix={<SearchOutlined />}
-        placeholder="Search configs..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 12 }}
-        size="small"
-      />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <Input
+          prefix={<SearchOutlined />}
+          placeholder="Search configs..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          size="small"
+          style={{ flex: 1 }}
+        />
+        {adHocCount > 0 && (
+          <Tooltip title={showAdHoc ? 'Hide ad hoc report configs' : `Show ${adHocCount} ad hoc report config${adHocCount !== 1 ? 's' : ''}`}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', fontSize: 12, color: '#8c8c8c' }}>
+              <ThunderboltOutlined style={{ color: showAdHoc ? '#fa8c16' : '#d9d9d9' }} />
+              <span>Ad Hoc</span>
+              <Switch size="small" checked={showAdHoc} onChange={setShowAdHoc} />
+            </div>
+          </Tooltip>
+        )}
+      </div>
 
       <div style={{ fontSize: 11, fontWeight: 600, color: '#8c8c8c', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.3 }}>
         Saved configs for current client

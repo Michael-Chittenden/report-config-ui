@@ -192,7 +192,7 @@ export default function ExhibitMenuSection({
   };
 
   // Check if a template is shared (CAPTRUST-wide) and count associated report configs
-  const getSharedTemplateInfo = (templateId) => {
+  const getTemplateInfo = (templateId) => {
     const tmpl = templates.find(t => t.ExhibitTemplateID === templateId);
     if (!tmpl) return { isShared: false, configCount: 0 };
     const isShared = tmpl.ExhibitTemplateType === 1 || tmpl.ExhibitTemplateType === 2;
@@ -200,16 +200,22 @@ export default function ExhibitMenuSection({
     return { isShared, configCount, templateName: tmpl.Name };
   };
 
-  // Update existing template in-place — with shared template confirmation & permission check
+  // Update existing template in-place — with shared/impact confirmation & permission check
   const handleUpdateExistingTemplate = () => {
     if (!exhibitTemplateId) return;
-    const { isShared, configCount, templateName } = getSharedTemplateInfo(exhibitTemplateId);
+    const { isShared, configCount, templateName } = getTemplateInfo(exhibitTemplateId);
     if (isShared) {
       if (!canModifySharedTemplates) {
         setPermissionDeniedOpen(true);
         return;
       }
-      setSharedConfirmAction({ type: 'update', templateId: exhibitTemplateId, templateName, configCount });
+      setSharedConfirmAction({ type: 'update', templateId: exhibitTemplateId, templateName, configCount, isShared });
+      setSharedConfirmOpen(true);
+      return;
+    }
+    // Client-level template used by multiple configs — warn about impact
+    if (configCount > 1) {
+      setSharedConfirmAction({ type: 'update', templateId: exhibitTemplateId, templateName, configCount, isShared: false });
       setSharedConfirmOpen(true);
       return;
     }
@@ -252,13 +258,19 @@ export default function ExhibitMenuSection({
   };
 
   const handleDeleteTemplateClick = (templateId) => {
-    const { isShared, configCount, templateName } = getSharedTemplateInfo(templateId);
+    const { isShared, configCount, templateName } = getTemplateInfo(templateId);
     if (isShared) {
       if (!canModifySharedTemplates) {
         setPermissionDeniedOpen(true);
         return;
       }
-      setSharedConfirmAction({ type: 'delete', templateId, templateName, configCount });
+      setSharedConfirmAction({ type: 'delete', templateId, templateName, configCount, isShared });
+      setSharedConfirmOpen(true);
+      return;
+    }
+    // Client-level template used by other configs — warn about impact
+    if (configCount > 0) {
+      setSharedConfirmAction({ type: 'delete', templateId, templateName, configCount, isShared: false });
       setSharedConfirmOpen(true);
       return;
     }
@@ -311,9 +323,16 @@ export default function ExhibitMenuSection({
             </div>
           );
         }
+        const isSharedTemplate = record.ExhibitTemplateType === 1 || record.ExhibitTemplateType === 2;
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <strong style={{ flex: 1 }}>{text}</strong>
+            {isSharedTemplate && (
+              <Tag color="purple" style={{ fontSize: 10, marginRight: 0 }}>
+                <ShareAltOutlined style={{ marginRight: 2 }} />
+                Shared
+              </Tag>
+            )}
             <EditOutlined
               style={{ fontSize: 12, color: '#8c8c8c', cursor: 'pointer', flexShrink: 0 }}
               onClick={(e) => startRename(record, e)}
@@ -400,10 +419,18 @@ export default function ExhibitMenuSection({
             {selectedExhibitIds.length} exhibits selected
           </Tag>
           {exhibitTemplateName && (
-            <Tag color="cyan" style={{ marginLeft: 4, fontSize: 11 }}>
-              <FileTextOutlined style={{ marginRight: 3 }} />
-              {exhibitTemplateName}
-            </Tag>
+            <>
+              <Tag color="cyan" style={{ marginLeft: 4, fontSize: 11 }}>
+                <FileTextOutlined style={{ marginRight: 3 }} />
+                {exhibitTemplateName}
+              </Tag>
+              {isCurrentTemplateShared && (
+                <Tag color="purple" style={{ fontSize: 11 }}>
+                  <ShareAltOutlined style={{ marginRight: 3 }} />
+                  Shared
+                </Tag>
+              )}
+            </>
           )}
         </h3>
         {expanded ? <DownOutlined style={{ fontSize: 12 }} /> : <RightOutlined style={{ fontSize: 12 }} />}
@@ -606,29 +633,35 @@ export default function ExhibitMenuSection({
             )}
           </Modal>
 
-          {/* Shared Template Modification Confirmation */}
+          {/* Template Modification Confirmation — shared or client-level with impact */}
           <Modal
             title={
               <Space>
                 <WarningOutlined style={{ color: '#faad14', fontSize: 18 }} />
                 <span>
-                  {sharedConfirmAction?.type === 'delete' ? 'Delete' : 'Modify'} Shared Exhibit Template
+                  {sharedConfirmAction?.type === 'delete' ? 'Delete' : 'Modify'}{' '}
+                  {sharedConfirmAction?.isShared ? 'Shared ' : ''}Exhibit Template
                 </span>
               </Space>
             }
             open={sharedConfirmOpen}
             onCancel={() => { setSharedConfirmOpen(false); setSharedConfirmAction(null); }}
             onOk={handleSharedConfirm}
-            okText={sharedConfirmAction?.type === 'delete' ? 'Delete Shared Template' : 'Update Shared Template'}
+            okText={sharedConfirmAction?.type === 'delete'
+              ? (sharedConfirmAction?.isShared ? 'Delete Shared Template' : 'Delete Template')
+              : (sharedConfirmAction?.isShared ? 'Update Shared Template' : 'Update Template')}
             okButtonProps={{ danger: sharedConfirmAction?.type === 'delete' }}
             width={520}
           >
             {sharedConfirmAction && (
               <div>
                 <p style={{ fontSize: 14, marginBottom: 12 }}>
-                  <strong>"{sharedConfirmAction.templateName}"</strong> is a{' '}
-                  <Tag color="purple" style={{ fontSize: 11 }}>CAPTRUST Shared</Tag>{' '}
-                  exhibit template.
+                  <strong>"{sharedConfirmAction.templateName}"</strong>
+                  {sharedConfirmAction.isShared ? (
+                    <> is a <Tag color="purple" style={{ fontSize: 11 }}>CAPTRUST Shared</Tag> exhibit template.</>
+                  ) : (
+                    <> is used by multiple report configurations in this client.</>
+                  )}
                 </p>
 
                 {sharedConfirmAction.configCount > 0 ? (
@@ -643,7 +676,8 @@ export default function ExhibitMenuSection({
                       <WarningOutlined style={{ marginRight: 6 }} />
                       {sharedConfirmAction.type === 'delete' ? 'Deleting' : 'Updating'} this template will impact{' '}
                       <strong>{sharedConfirmAction.configCount}</strong>{' '}
-                      report configuration{sharedConfirmAction.configCount !== 1 ? 's' : ''} across all clients that reference it.
+                      report configuration{sharedConfirmAction.configCount !== 1 ? 's' : ''}{' '}
+                      {sharedConfirmAction.isShared ? 'across all clients' : 'in this client'} that reference it.
                     </div>
                     <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 4 }}>
                       {sharedConfirmAction.type === 'delete'
@@ -667,8 +701,8 @@ export default function ExhibitMenuSection({
 
                 <p style={{ fontSize: 13, color: '#595959' }}>
                   {sharedConfirmAction.type === 'delete'
-                    ? 'Are you sure you want to permanently delete this shared template?'
-                    : 'Are you sure you want to save these changes to the shared template?'
+                    ? `Are you sure you want to permanently delete this ${sharedConfirmAction.isShared ? 'shared ' : ''}template?`
+                    : `Are you sure you want to save these changes? ${sharedConfirmAction.configCount > 1 ? 'All configurations using this template will be affected.' : ''}`
                   }
                 </p>
               </div>

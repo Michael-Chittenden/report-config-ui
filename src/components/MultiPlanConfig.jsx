@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Select, Button, Input, Modal, Table, Tag, Space, Checkbox, Popconfirm, message } from 'antd';
 import { TeamOutlined, FilterOutlined, SaveOutlined, EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined, CopyOutlined } from '@ant-design/icons';
 import { fundChangesInProgress, fundChangesExecuted } from '../data/mockData';
@@ -40,6 +40,7 @@ export default function MultiPlanConfig({
   isTemplateAdmin = false,
   allPlans = [],
 }) {
+  const lastToastedConfigRef = useRef(null);
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [availablePlans, setAvailablePlans] = useState([...plans]);
   const [filterType, setFilterType] = useState(null);
@@ -123,8 +124,12 @@ export default function MultiPlanConfig({
       }
     }
 
-    if (!loadedConfig._autoLoad) {
-      message.success('Configuration loaded');
+    const toastKey = loadedConfig.ReportConfigID || loadedConfig._loadTimestamp || JSON.stringify(loadedConfig);
+    if (!loadedConfig._autoLoad && lastToastedConfigRef.current !== toastKey) {
+      lastToastedConfigRef.current = toastKey;
+      const parts = ['Report configuration'];
+      if (loadedConfig.exhibitTemplateName) parts.push(`exhibit template "${loadedConfig.exhibitTemplateName}"`);
+      message.success(`${parts.join(' and ')} loaded`);
     }
   }, [loadedConfig]);
 

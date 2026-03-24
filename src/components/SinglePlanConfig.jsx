@@ -1,5 +1,5 @@
 import { Checkbox, Alert, message } from 'antd';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { fundChangesInProgress, fundChangesExecuted } from '../data/mockData';
 import { resolveManagerGroups } from '../data/dataResolvers';
 import FundChangesSection from './FundChangesSection';
@@ -17,6 +17,7 @@ const emptyManagerGroups = [
 
 export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveConfig, currentPrimaryName, activeConfigName, activeConfigId, savedConfigRecord, allTemplates, allConfigs, onSaveTemplate, onUpdateTemplate, onRenameTemplate, onDeleteTemplate, clientAccountId, planFundChanges, planInvestments = [], allCandidates = [], isTemplateAdmin = false, allPlans = [], otherPlansUsingConfig = [] }) {
   // --- All config state lives here ---
+  const lastToastedConfigRef = useRef(null);
   const [qdiaOptOut, setQdiaOptOut] = useState(false);
 
   // Fund changes — default to unchecked when no config is loaded
@@ -70,8 +71,12 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
     setBulkUnlocked(loadedConfig.bulkUnlocked ?? (loadedConfig.BulkTierOverrideID != null || loadedConfig.BulkPctThresholdID != null));
     setBulkTierOverrideId(loadedConfig.bulkTierOverrideId ?? loadedConfig.BulkTierOverrideID ?? null);
     setBulkPctThresholdId(loadedConfig.bulkPctThresholdId ?? loadedConfig.BulkPctThresholdID ?? null);
-    if (!loadedConfig._autoLoad && !loadedConfig._defaultConfig) {
-      message.success('Configuration loaded');
+    const toastKey = loadedConfig.ReportConfigID || loadedConfig._loadTimestamp || JSON.stringify(loadedConfig);
+    if (!loadedConfig._autoLoad && !loadedConfig._defaultConfig && lastToastedConfigRef.current !== toastKey) {
+      lastToastedConfigRef.current = toastKey;
+      const parts = ['Report configuration'];
+      if (loadedConfig.exhibitTemplateName) parts.push(`exhibit template "${loadedConfig.exhibitTemplateName}"`);
+      message.success(`${parts.join(' and ')} loaded`);
     }
   }, [loadedConfig]);
 
