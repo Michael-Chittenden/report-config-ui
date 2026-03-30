@@ -699,10 +699,13 @@ function App() {
         exhibitTemplateName: templateName,
         exhibitTemplate: primaryForType.ExhibitTemplateID ? { ExhibitTemplateID: primaryForType.ExhibitTemplateID } : null,
         selectedExhibitIds: exhibitIds,
-        // Plan group data for multi plan
-        _planGroupId: primaryForType._planGroupId || null,
-        _planGroupName: primaryForType._planGroupName || null,
-        _planIds: primaryForType._planIds || null,
+        // Plan group data for multi plan — fall back to first saved plan group for this client
+        ...(() => {
+          if (primaryForType._planIds) return { _planGroupId: primaryForType._planGroupId, _planGroupName: primaryForType._planGroupName, _planIds: primaryForType._planIds };
+          const fallbackGroup = allPlanGroups.find(g => g.AccountID === activeClient.accountId && g.ct_PlanIDs?.length > 0);
+          if (fallbackGroup) return { _planGroupId: fallbackGroup.ReportPlanGroupID, _planGroupName: fallbackGroup.ReportPlanGroupName, _planIds: fallbackGroup.ct_PlanIDs };
+          return { _planGroupId: null, _planGroupName: null, _planIds: null };
+        })(),
         _autoLoad: true,
         _key: Date.now(),
       });
@@ -730,15 +733,15 @@ function App() {
       <div className="demo-banner">
         <Space>
           <span className="demo-label">Demo Mode</span>
-          <span>Institutional Reporting Platform (IRP) &mdash; Interactive Mockup</span>
+          <span>Interactive Mockup</span>
         </Space>
-        <span style={{ opacity: 0.7 }}>v0.2.0</span>
+        <span style={{ opacity: 0.7 }}>v1.2</span>
       </div>
 
-      {/* App Header */}
+      {/* App Header with Logo */}
       <div className="app-header">
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img src={irpLogo} alt="Institutional Reporting Platform" style={{ height: 40 }} />
+        <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', height: 48 }}>
+          <img src={irpLogo} alt="Institutional Reporting Platform" style={{ height: 160, marginTop: -2 }} />
         </div>
         <div className="client-info" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Button

@@ -432,8 +432,14 @@ export default function SaveConfigSection({
 
   return (
     <>
-      {/* Validation Warnings */}
-      <div style={{ marginBottom: 16 }}>
+      {/* --- Data Checks Group --- */}
+      <div style={{ borderLeft: '3px solid #7CA7AE', paddingLeft: 16, marginBottom: 16, marginTop: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#7CA7AE', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+          Data Checks
+        </div>
+        <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 12 }}>
+          Compliance validations and data availability status
+        </div>
         {warnings.map((w, idx) => (
           <Alert
             key={idx}

@@ -127,31 +127,48 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
         </div>
       </div>
 
-      <FundChangesSection
-        includeFundChanges={includeFundChanges}
-        setIncludeFundChanges={setIncludeFundChanges}
-        optInAll={optInAllFundChanges}
-        setOptInAll={setOptInAllFundChanges}
-        inProgressChecks={inProgressChecks}
-        setInProgressChecks={setInProgressChecks}
-        executedChecks={executedChecks}
-        setExecutedChecks={setExecutedChecks}
-        fundChangesInProgressData={planFundChanges?.inProgress}
-        fundChangesExecutedData={planFundChanges?.executed}
-      />
+      {/* --- Included Investments Group --- */}
+      <div style={{ borderLeft: '3px solid #00437B', paddingLeft: 16, marginBottom: 8, marginTop: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#00437B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+          Included Investments
+        </div>
+        <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 12 }}>
+          Control which investments appear in the report — fund changes and candidate comparisons
+        </div>
+        <FundChangesSection
+          includeFundChanges={includeFundChanges}
+          setIncludeFundChanges={setIncludeFundChanges}
+          optInAll={optInAllFundChanges}
+          setOptInAll={setOptInAllFundChanges}
+          inProgressChecks={inProgressChecks}
+          setInProgressChecks={setInProgressChecks}
+          executedChecks={executedChecks}
+          setExecutedChecks={setExecutedChecks}
+          fundChangesInProgressData={planFundChanges?.inProgress}
+          fundChangesExecutedData={planFundChanges?.executed}
+        />
 
-      <ManagerGroupsSection
-        includeCandidates={includeCandidates}
-        setIncludeCandidates={setIncludeCandidates}
-        groups={managerGroups}
-        setGroups={setManagerGroups}
-        planInvestments={planInvestments}
-        allCandidates={allCandidates}
-        selectedCandidateIds={selectedCandidateIds}
-        setSelectedCandidateIds={setSelectedCandidateIds}
-        plans={plan ? [plan] : []}
-      />
+        <ManagerGroupsSection
+          includeCandidates={includeCandidates}
+          setIncludeCandidates={setIncludeCandidates}
+          groups={managerGroups}
+          setGroups={setManagerGroups}
+          planInvestments={planInvestments}
+          allCandidates={allCandidates}
+          selectedCandidateIds={selectedCandidateIds}
+          setSelectedCandidateIds={setSelectedCandidateIds}
+          plans={plan ? [plan] : []}
+        />
+      </div>
 
+      {/* --- Content Group --- */}
+      <div style={{ borderLeft: '3px solid #3465CD', paddingLeft: 16, marginBottom: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#3465CD', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+          Content
+        </div>
+        <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 12 }}>
+          Select the exhibits and pages included in the report output
+        </div>
       <ExhibitMenuSection
         configType="single"
         selectedExhibitIds={selectedExhibitIds}
@@ -171,17 +188,27 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
         clientAccountId={clientAccountId}
         isTemplateAdmin={isTemplateAdmin}
       />
+      </div>
 
-      <BulkRunSection
-        includeInBulk={includeInBulk}
-        setIncludeInBulk={setIncludeInBulk}
-        unlocked={bulkUnlocked}
-        setUnlocked={setBulkUnlocked}
-        selectedTierOverride={bulkTierOverrideId}
-        setSelectedTierOverride={setBulkTierOverrideId}
-        selectedPctThreshold={bulkPctThresholdId}
-        setSelectedPctThreshold={setBulkPctThresholdId}
-      />
+      {/* --- Scheduling Group --- */}
+      <div style={{ borderLeft: '3px solid #5FB4E5', paddingLeft: 16, marginBottom: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#5FB4E5', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+          Scheduling
+        </div>
+        <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 12 }}>
+          When and how this report is generated in the bulk run process
+        </div>
+        <BulkRunSection
+          includeInBulk={includeInBulk}
+          setIncludeInBulk={setIncludeInBulk}
+          unlocked={bulkUnlocked}
+          setUnlocked={setBulkUnlocked}
+          selectedTierOverride={bulkTierOverrideId}
+          setSelectedTierOverride={setBulkTierOverrideId}
+          selectedPctThreshold={bulkPctThresholdId}
+          setSelectedPctThreshold={setBulkPctThresholdId}
+        />
+      </div>
 
       <SaveConfigSection
         configType="single"
