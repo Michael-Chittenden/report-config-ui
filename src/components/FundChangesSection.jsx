@@ -231,7 +231,7 @@ export default function FundChangesSection({
 
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#52c41a' }}>
-                    Fund changes executed since last quarter end
+                    Fund changes executed in the past year
                   </div>
                   {executedItems.length > 0 ? (
                     <table className="fund-change-table">

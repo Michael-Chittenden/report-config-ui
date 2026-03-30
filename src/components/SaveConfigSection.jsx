@@ -264,7 +264,7 @@ export default function SaveConfigSection({
                       {plan.fundChanges.executed?.length > 0 && (
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 600, color: '#52c41a', marginBottom: 4 }}>
-                            Fund Changes — Since Last Quarter ({plan.fundChanges.executed.length})
+                            Fund Changes — Past Year ({plan.fundChanges.executed.length})
                           </div>
                           {plan.fundChanges.executed.map((fc, i) => (
                             <div key={fc.id || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>

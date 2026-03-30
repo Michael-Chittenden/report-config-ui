@@ -856,7 +856,7 @@ export default function MockDataAdmin({
           {fcExecuted.length > 0 && (
             <div>
               <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: '#52c41a' }}>
-                Fund changes since last quarter ({fcExecuted.length})
+                Fund changes executed in the past year ({fcExecuted.length})
               </div>
               <Table
                 dataSource={fcExecuted}
