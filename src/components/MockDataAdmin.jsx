@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Drawer, Tabs, Table, Button, Input, Select, Space, Tag, Popconfirm, Divider, Switch, message } from 'antd';
+import { Drawer, Tabs, Table, Button, Input, Select, Space, Tag, Popconfirm, Divider, Switch, Checkbox, message } from 'antd';
 import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 
 const planTypes = ['DC', 'NQ', 'DB'];
@@ -33,6 +33,11 @@ export default function MockDataAdmin({
   candidates,
   setCandidates,
   allConfigs = [],
+  setAllConfigs,
+  allTemplates = [],
+  setAllTemplates,
+  allPlanGroups = [],
+  setAllPlanGroups,
   allFundChanges = [],
   setAllFundChanges,
   isTemplateAdmin = false,
@@ -378,6 +383,24 @@ export default function MockDataAdmin({
         const plan = allPlans.find(p => p.ct_PlanID === record.ct_PlanID);
         return <span style={{ fontSize: 11, color: '#8c8c8c' }}>{plan ? plan.name : `Plan ${record.ct_PlanID}`}</span>;
       },
+    },
+    {
+      title: 'Q Complete',
+      key: 'quarterComplete',
+      width: 90,
+      align: 'center',
+      render: (_, record) => (
+        <Checkbox
+          checked={!!record.quarterComplete}
+          onChange={(e) => {
+            setInvestments(prev => prev.map(inv =>
+              inv.ct_investmentid === record.ct_investmentid
+                ? { ...inv, quarterComplete: e.target.checked }
+                : inv
+            ));
+          }}
+        />
+      ),
     },
     {
       title: '',
@@ -954,6 +977,9 @@ export default function MockDataAdmin({
               plans: allPlans,
               investments,
               candidates,
+              configs: allConfigs,
+              templates: allTemplates,
+              planGroups: allPlanGroups,
               fundChanges: allFundChanges,
               _exportedAt: new Date().toISOString(),
             };
@@ -987,6 +1013,9 @@ export default function MockDataAdmin({
                   if (data.plans) setAllPlans(data.plans);
                   if (data.investments) setInvestments(data.investments);
                   if (data.candidates) setCandidates(data.candidates);
+                  if (data.configs && setAllConfigs) setAllConfigs(data.configs);
+                  if (data.templates && setAllTemplates) setAllTemplates(data.templates);
+                  if (data.planGroups && setAllPlanGroups) setAllPlanGroups(data.planGroups);
                   if (data.fundChanges && setAllFundChanges) setAllFundChanges(data.fundChanges);
                   message.success('Demo data imported successfully');
                 } catch (err) {

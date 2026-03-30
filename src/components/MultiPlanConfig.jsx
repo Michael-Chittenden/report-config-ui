@@ -468,6 +468,7 @@ export default function MultiPlanConfig({
           plans={selectedPlans}
           allFundChanges={allFundChanges}
         />
+        {/* TODO: Re-enable Asset Class | Managers section when candidate investment workflow is finalized
         <ManagerGroupsSection
           includeCandidates={includeCandidates}
           setIncludeCandidates={setIncludeCandidates}
@@ -479,6 +480,7 @@ export default function MultiPlanConfig({
           setSelectedCandidateIds={setSelectedCandidateIds}
           plans={selectedPlans}
         />
+        */}
       </div>
 
       {/* --- Content Group --- */}

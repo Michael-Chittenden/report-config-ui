@@ -148,6 +148,7 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
           fundChangesExecutedData={planFundChanges?.executed}
         />
 
+        {/* TODO: Re-enable Asset Class | Managers section when candidate investment workflow is finalized
         <ManagerGroupsSection
           includeCandidates={includeCandidates}
           setIncludeCandidates={setIncludeCandidates}
@@ -159,6 +160,7 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
           setSelectedCandidateIds={setSelectedCandidateIds}
           plans={plan ? [plan] : []}
         />
+        */}
       </div>
 
       {/* --- Content Group --- */}

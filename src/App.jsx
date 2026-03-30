@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { ConfigProvider, Select, Button, Space, Tag, message } from 'antd';
-import { SettingOutlined, StarFilled, FileTextOutlined, TeamOutlined, ExperimentOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { SettingOutlined, StarFilled, FileTextOutlined, TeamOutlined, ExperimentOutlined, ShareAltOutlined, DashboardOutlined } from '@ant-design/icons';
 import { allClients as seedClients, allPlans as seedPlans, reportConfigs as seedConfigs, exhibitTemplateConfigs as seedTemplates, savedPlanGroups as seedPlanGroups, fundChangesInProgress, fundChangesExecuted, seedInvestments } from './data/mockData';
 import { resolveReportConfig, resolveExhibitPageSetIds } from './data/dataResolvers';
 import ConfigTypeSelector from './components/ConfigTypeSelector';
@@ -9,6 +9,7 @@ import MultiPlanConfig from './components/MultiPlanConfig';
 import ComboConfig from './components/ComboConfig';
 import LoadConfigModal from './components/LoadConfigModal';
 import MockDataAdmin from './components/MockDataAdmin';
+import BulkDashboard from './components/BulkDashboard';
 import irpLogo from './assets/irp-logo.png';
 import './App.css';
 
@@ -242,6 +243,9 @@ function App() {
   const handleDeletePlanGroup = (groupId) => {
     setAllPlanGroups(prev => prev.filter(g => g.ReportPlanGroupID !== groupId));
   };
+
+  // Dashboard view state
+  const [dashboardOpen, setDashboardOpen] = useState(false);
 
   // Track active config (loaded or saved)
   const [activeConfigId, setActiveConfigId] = useState(null);
@@ -746,6 +750,16 @@ function App() {
         <div className="client-info" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Button
             type="text"
+            icon={<DashboardOutlined />}
+            onClick={() => setDashboardOpen(!dashboardOpen)}
+            style={{ color: dashboardOpen ? '#00437B' : '#3465CD', fontSize: 12, fontWeight: dashboardOpen ? 700 : 400 }}
+            size="small"
+          >
+            Bulk Dashboard
+          </Button>
+          <div style={{ borderLeft: '1px solid #d9d9d9', height: 16 }} />
+          <Button
+            type="text"
             icon={<ExperimentOutlined />}
             onClick={() => setMockAdminOpen(true)}
             style={{ color: '#5B325F', fontSize: 12 }}
@@ -766,6 +780,16 @@ function App() {
 
       {/* Main Content */}
       <div className="app-content">
+        {dashboardOpen ? (
+          <BulkDashboard
+            allConfigs={allConfigs}
+            allClients={allClients}
+            allPlans={allPlans}
+            investments={investments}
+            onClose={() => setDashboardOpen(false)}
+          />
+        ) : (
+        <>
         {/* Top Config Bar */}
         <div className="config-bar">
           <div className="config-field">
@@ -1037,6 +1061,8 @@ function App() {
             </div>
           </div>
         )}
+        </>
+        )}
       </div>
 
       <LoadConfigModal
@@ -1064,6 +1090,11 @@ function App() {
         candidates={candidates}
         setCandidates={setCandidates}
         allConfigs={allConfigs}
+        setAllConfigs={setAllConfigs}
+        allTemplates={allTemplates}
+        setAllTemplates={setAllTemplates}
+        allPlanGroups={allPlanGroups}
+        setAllPlanGroups={setAllPlanGroups}
         allFundChanges={allFundChanges}
         setAllFundChanges={setAllFundChanges}
         isTemplateAdmin={isTemplateAdmin}
