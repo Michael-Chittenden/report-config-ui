@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons';
 import { bulkTierOverrides, bulkPctThresholds, reportConfigTypes } from '../data/mockData';
 
-export default function BulkDashboard({ allConfigs = [], allClients = [], allPlans = [], investments = [], onClose }) {
+export default function BulkDashboard({ allConfigs = [], allClients = [], allPlans = [], investments = [], allTemplates = [], onClose }) {
   const [search, setSearch] = useState('');
   const [clientFilter, setClientFilter] = useState(null);
 
@@ -51,6 +51,30 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
         const investmentCount = planInvestments.length;
         const completedCount = planInvestments.filter(inv => inv.quarterComplete).length;
 
+        // Check if using a shared report config (via ParentReportConfigID or defaultConfigId linkage)
+        // For this dashboard, a config is "shared-based" if it was originally a CAPTRUST shared config
+        // We detect this by checking if there's a shared config with the same name pattern
+        const isUsingSharedConfig = (() => {
+          if (c.ParentReportConfigID) {
+            const parent = allConfigs.find(pc => pc.ReportConfigID === c.ParentReportConfigID);
+            return parent && (parent.AccountID === null || parent.AccountID === undefined);
+          }
+          // Check if a shared config exists with this name (minus client-specific suffixes)
+          const sharedMatch = allConfigs.find(sc =>
+            (sc.AccountID === null || sc.AccountID === undefined) &&
+            sc.ReportConfigID !== c.ReportConfigID &&
+            c.ReportConfigName.includes(sc.ReportConfigName)
+          );
+          return !!sharedMatch;
+        })();
+
+        // Resolve exhibit template
+        const template = c.ExhibitTemplateID
+          ? allTemplates.find(t => t.ExhibitTemplateID === c.ExhibitTemplateID)
+          : null;
+        const exhibitTemplateName = template ? template.Name : null;
+        const isSharedTemplate = template && (template.AccountID === null || template.AccountID === undefined);
+
         // Tier and threshold lookups
         const tierName = c.BulkTierOverrideID
           ? bulkTierOverrides.find(t => t.id === c.BulkTierOverrideID)?.name || `Tier ${c.BulkTierOverrideID}`
@@ -67,6 +91,9 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
           planIds,
           investmentCount,
           completedCount,
+          isUsingSharedConfig,
+          exhibitTemplateName,
+          isSharedTemplate,
           tierName,
           thresholdName,
         };
@@ -144,7 +171,12 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       sorter: (a, b) => a.ReportConfigName.localeCompare(b.ReportConfigName),
       render: (name, record) => (
         <div>
-          <div style={{ fontWeight: 600, fontSize: 13 }}>{name}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontWeight: 600, fontSize: 13 }}>{name}</span>
+            {record.isUsingSharedConfig && (
+              <Tag color="purple" style={{ fontSize: 10, margin: 0 }}>Shared</Tag>
+            )}
+          </div>
           <div style={{ fontSize: 11, color: '#8c8c8c' }}>
             {record._savedBy || 'Unknown'} &bull; {new Date(record.LastSaved).toLocaleDateString()}
           </div>
@@ -186,6 +218,22 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
               <Tag style={{ fontSize: 11, color: '#8c8c8c' }}>+{names.length - 1} more</Tag>
             </span>
           </Tooltip>
+        );
+      },
+    },
+    {
+      title: 'Exhibit Template',
+      key: 'exhibit',
+      width: 180,
+      render: (_, record) => {
+        if (!record.exhibitTemplateName) return <span style={{ color: '#d9d9d9', fontSize: 12 }}>None</span>;
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 12 }}>{record.exhibitTemplateName}</span>
+            {record.isSharedTemplate && (
+              <Tag color="purple" style={{ fontSize: 10, margin: 0 }}>Shared</Tag>
+            )}
+          </div>
         );
       },
     },

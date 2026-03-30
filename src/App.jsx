@@ -786,6 +786,7 @@ function App() {
             allClients={allClients}
             allPlans={allPlans}
             investments={investments}
+            allTemplates={allTemplates}
             onClose={() => setDashboardOpen(false)}
           />
         ) : (
