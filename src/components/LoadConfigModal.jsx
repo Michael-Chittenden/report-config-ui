@@ -184,7 +184,7 @@ export default function LoadConfigModal({ open, onClose, onSelect, configs = [],
         const isCurrent = planId === selectedPlanId;
         return (
           <Tooltip title={name}>
-            <span style={{ fontSize: 11, fontWeight: isCurrent ? 600 : 400, color: isCurrent ? '#1677ff' : undefined }}>
+            <span style={{ fontSize: 11, fontWeight: isCurrent ? 600 : 400, color: isCurrent ? '#00437B' : undefined }}>
               {name}
             </span>
           </Tooltip>

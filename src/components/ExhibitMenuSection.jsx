@@ -474,8 +474,8 @@ export default function ExhibitMenuSection({
           {/* Include individual plan summaries — multi plan only */}
           {configType === 'multi' && setIncludeIndividualSummaries && (
             <div style={{
-              background: includeIndividualSummaries ? '#f0f5ff' : '#fafafa',
-              border: `1px solid ${includeIndividualSummaries ? '#adc6ff' : '#d9d9d9'}`,
+              background: includeIndividualSummaries ? '#edf6fb' : '#fafafa',
+              border: `1px solid ${includeIndividualSummaries ? '#5FB4E5' : '#d9d9d9'}`,
               borderRadius: 6,
               padding: '10px 16px',
               marginBottom: 12,
@@ -575,8 +575,8 @@ export default function ExhibitMenuSection({
                 onChange={(e) => setSaveAsShared(e.target.checked)}
               >
                 <Space size={4}>
-                  <ShareAltOutlined style={{ color: saveAsShared ? '#722ed1' : '#8c8c8c' }} />
-                  <span style={{ fontSize: 12, color: saveAsShared ? '#722ed1' : '#8c8c8c' }}>
+                  <ShareAltOutlined style={{ color: saveAsShared ? '#5B325F' : '#8c8c8c' }} />
+                  <span style={{ fontSize: 12, color: saveAsShared ? '#5B325F' : '#8c8c8c' }}>
                     Share as CAPTRUST Template
                   </span>
                 </Space>

@@ -183,13 +183,13 @@ export default function FundChangesSection({
             {includeFundChanges && (!isMulti || selectedPlanId) && (
               <>
                 {isMulti && selectedPlanId && (
-                  <div style={{ fontSize: 12, color: '#1677ff', fontWeight: 600 }}>
+                  <div style={{ fontSize: 12, color: '#00437B', fontWeight: 600 }}>
                     Showing fund changes for: {plans.find(p => p.ct_PlanID === selectedPlanId)?.name || `Plan ${selectedPlanId}`}
                   </div>
                 )}
 
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#1677ff' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#00437B' }}>
                     Fund changes in progress
                   </div>
                   {inProgressItems.length > 0 ? (

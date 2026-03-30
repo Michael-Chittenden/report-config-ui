@@ -200,7 +200,7 @@ export default function SaveConfigSection({
               {/* Summary bar */}
               <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6, padding: '10px 16px', marginBottom: 16, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
                 <span><TeamOutlined style={{ color: '#52c41a', marginRight: 6 }} /><strong>{reportPlans.length}</strong> plan{reportPlans.length !== 1 ? 's' : ''}</span>
-                <span><FileTextOutlined style={{ color: '#1677ff', marginRight: 6 }} /><strong>{totalInvestments}</strong> investment{totalInvestments !== 1 ? 's' : ''}</span>
+                <span><FileTextOutlined style={{ color: '#00437B', marginRight: 6 }} /><strong>{totalInvestments}</strong> investment{totalInvestments !== 1 ? 's' : ''}</span>
                 {(totalFcInProgress > 0 || totalFcExecuted > 0) && (
                   <span><SwapOutlined style={{ color: '#fa8c16', marginRight: 6 }} /><strong>{totalFcInProgress + totalFcExecuted}</strong> fund change{totalFcInProgress + totalFcExecuted !== 1 ? 's' : ''}</span>
                 )}
@@ -212,7 +212,7 @@ export default function SaveConfigSection({
               {/* Per-plan breakdown */}
               {reportPlans.map((plan, idx) => (
                 <div key={plan.ct_PlanID || idx} style={{ marginBottom: 16, border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden' }}>
-                  <div style={{ background: '#e6f4ff', padding: '8px 12px', borderBottom: '1px solid #91caff', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ background: '#edf6fb', padding: '8px 12px', borderBottom: '1px solid #5FB4E5', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <strong>{plan.name || `Plan ${plan.ct_PlanID}`}</strong>
                     {plan.type && <Tag style={{ fontSize: 10 }}>{plan.type}</Tag>}
                     {plan._sourceConfigs && plan._sourceConfigs.length > 0 && (
@@ -225,7 +225,7 @@ export default function SaveConfigSection({
                   {/* Investments */}
                   {plan.investments && plan.investments.length > 0 ? (
                     <div style={{ padding: '8px 12px' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#1677ff', marginBottom: 4 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#00437B', marginBottom: 4 }}>
                         Investments ({plan.investments.length})
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -567,8 +567,8 @@ export default function SaveConfigSection({
           <Alert
             type="info"
             showIcon
-            icon={<ShareAltOutlined style={{ color: '#1677ff' }} />}
-            style={{ marginBottom: 16, border: '1px solid #91caff' }}
+            icon={<ShareAltOutlined style={{ color: '#00437B' }} />}
+            style={{ marginBottom: 16, border: '1px solid #5FB4E5' }}
             message={
               <span>
                 <strong>"{activeConfigName}"</strong> is a shared CAPTRUST report configuration.
@@ -701,7 +701,7 @@ export default function SaveConfigSection({
                   alignItems: 'center',
                   gap: 8,
                 }}>
-                  <SwapOutlined style={{ color: '#1677ff', fontSize: 12, flexShrink: 0 }} />
+                  <SwapOutlined style={{ color: '#00437B', fontSize: 12, flexShrink: 0 }} />
                   <span style={{ fontWeight: 600, minWidth: 160 }}>{ch.label}</span>
                   <span style={{ color: '#ff4d4f', textDecoration: 'line-through', fontSize: 12 }}>{ch.from}</span>
                   <span style={{ color: '#8c8c8c', fontSize: 12 }}>&rarr;</span>
@@ -840,8 +840,8 @@ export default function SaveConfigSection({
         {/* Share as Template — hidden for ad-hoc runs */}
         {!runAfterSave && (canShareTemplates ? (
           <div style={{
-            background: shareAsTemplate ? '#f0f5ff' : '#fafafa',
-            border: `1px solid ${shareAsTemplate ? '#adc6ff' : '#d9d9d9'}`,
+            background: shareAsTemplate ? '#edf6fb' : '#fafafa',
+            border: `1px solid ${shareAsTemplate ? '#5FB4E5' : '#d9d9d9'}`,
             borderRadius: 6,
             padding: 12,
             marginTop: 12,
@@ -852,7 +852,7 @@ export default function SaveConfigSection({
               onChange={(e) => setShareAsTemplate(e.target.checked)}
             >
               <Space>
-                <ShareAltOutlined style={{ color: shareAsTemplate ? '#722ed1' : '#d9d9d9' }} />
+                <ShareAltOutlined style={{ color: shareAsTemplate ? '#5B325F' : '#d9d9d9' }} />
                 <strong>Share as CAPTRUST Template</strong>
               </Space>
             </Checkbox>

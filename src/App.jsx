@@ -9,6 +9,7 @@ import MultiPlanConfig from './components/MultiPlanConfig';
 import ComboConfig from './components/ComboConfig';
 import LoadConfigModal from './components/LoadConfigModal';
 import MockDataAdmin from './components/MockDataAdmin';
+import irpLogo from './assets/irp-logo.png';
 import './App.css';
 
 function App() {
@@ -718,7 +719,8 @@ function App() {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: '#1677ff',
+          colorPrimary: '#00437B',
+          colorLink: '#3465CD',
           borderRadius: 6,
           fontSize: 14,
         },
@@ -735,16 +737,15 @@ function App() {
 
       {/* App Header */}
       <div className="app-header">
-        <Space size="large">
-          <SettingOutlined style={{ fontSize: 20, color: '#1677ff' }} />
-          <h1>Institutional Reporting Platform</h1>
-        </Space>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <img src={irpLogo} alt="Institutional Reporting Platform" style={{ height: 40 }} />
+        </div>
         <div className="client-info" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Button
             type="text"
             icon={<ExperimentOutlined />}
             onClick={() => setMockAdminOpen(true)}
-            style={{ color: '#722ed1', fontSize: 12 }}
+            style={{ color: '#5B325F', fontSize: 12 }}
             size="small"
           >
             Demo Data
@@ -815,8 +816,8 @@ function App() {
         {/* Active Config Name Banner */}
         {activeConfigName && configType && (
           <div style={{
-            background: activeConfigIsPrimary ? '#f6ffed' : '#fff',
-            border: `1px solid ${activeConfigIsPrimary ? '#b7eb8f' : '#d9d9d9'}`,
+            background: activeConfigIsPrimary ? '#edf6fb' : '#fff',
+            border: `1px solid ${activeConfigIsPrimary ? '#5FB4E5' : '#d9d9d9'}`,
             borderRadius: 8,
             padding: '10px 20px',
             marginBottom: 16,
@@ -825,7 +826,7 @@ function App() {
             justifyContent: 'space-between',
           }}>
             <Space>
-              <FileTextOutlined style={{ color: '#1677ff' }} />
+              <FileTextOutlined style={{ color: '#00437B' }} />
               <span style={{ fontSize: 13, color: '#8c8c8c' }}>Report Config:</span>
               <strong style={{ fontSize: 14 }}>{activeConfigName}</strong>
               {(() => {
@@ -854,8 +855,8 @@ function App() {
         {!activeConfigName && configType && (configType !== 'single' || selectedPlan) && (
           loadedConfig?._defaultConfig ? (
             <div style={{
-              background: '#e6f4ff',
-              border: '1px solid #91caff',
+              background: '#edf6fb',
+              border: '1px solid #5FB4E5',
               borderRadius: 8,
               padding: '12px 20px',
               marginBottom: 16,
@@ -865,7 +866,7 @@ function App() {
               fontSize: 13,
             }}>
               <Space>
-                <FileTextOutlined style={{ color: '#1677ff', fontSize: 18 }} />
+                <FileTextOutlined style={{ color: '#00437B', fontSize: 18 }} />
                 <span style={{ color: '#003a8c' }}>
                   <strong>Default config applied:</strong> <em>{loadedConfig._defaultConfigName}</em> &mdash; review the settings below and save as a new Primary config for this plan.
                 </span>
@@ -1022,7 +1023,7 @@ function App() {
             padding: 40,
             textAlign: 'center',
           }}>
-            <TeamOutlined style={{ fontSize: 48, marginBottom: 16, opacity: 0.3, color: '#1677ff' }} />
+            <TeamOutlined style={{ fontSize: 48, marginBottom: 16, opacity: 0.3, color: '#00437B' }} />
             <div style={{ fontSize: 16, marginBottom: 8 }}>
               Client Only / CAPTRUST at Work
             </div>

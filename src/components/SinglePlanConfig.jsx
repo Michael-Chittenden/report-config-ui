@@ -95,8 +95,8 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
     <div>
       {/* Plan Banner */}
       <div style={{
-        background: '#e6f4ff',
-        border: '1px solid #91caff',
+        background: '#edf6fb',
+        border: '1px solid #5FB4E5',
         borderRadius: 8,
         padding: '12px 20px',
         marginBottom: 16,
@@ -106,7 +106,7 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
       }}>
         <div>
           <div style={{ fontWeight: 600, fontSize: 15 }}>{plan.name}</div>
-          <div style={{ fontSize: 12, color: '#1677ff' }}>
+          <div style={{ fontSize: 12, color: '#00437B' }}>
             Type: {plan.type} &bull; Vendor: {plan.vendor} &bull; Period: {period === 'Q' ? 'Quarterly' : 'Monthly'}
           </div>
         </div>

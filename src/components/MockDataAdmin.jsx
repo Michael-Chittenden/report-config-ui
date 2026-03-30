@@ -841,7 +841,7 @@ export default function MockDataAdmin({
           )}
           {fcInProgress.length > 0 && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: '#1677ff' }}>
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: '#00437B' }}>
                 Fund changes in progress ({fcInProgress.length})
               </div>
               <Table
@@ -886,7 +886,7 @@ export default function MockDataAdmin({
     <Drawer
       title={
         <Space>
-          <ExperimentOutlined style={{ color: '#722ed1' }} />
+          <ExperimentOutlined style={{ color: '#5B325F' }} />
           <span>Demo Data Configuration</span>
           <Tag color="purple" style={{ fontSize: 10 }}>Mockup Only</Tag>
         </Space>
@@ -903,7 +903,7 @@ export default function MockDataAdmin({
         padding: '8px 12px',
         marginBottom: 12,
         fontSize: 12,
-        color: '#722ed1',
+        color: '#5B325F',
       }}>
         This panel lets you add mock clients, plans, investments, and candidate managers for demo purposes.
         Changes persist in your browser. This would not exist in the production application.
@@ -911,8 +911,8 @@ export default function MockDataAdmin({
 
       {/* User Permission Toggle */}
       <div style={{
-        background: isTemplateAdmin ? '#f0f5ff' : '#fafafa',
-        border: `1px solid ${isTemplateAdmin ? '#adc6ff' : '#d9d9d9'}`,
+        background: isTemplateAdmin ? '#edf6fb' : '#fafafa',
+        border: `1px solid ${isTemplateAdmin ? '#5FB4E5' : '#d9d9d9'}`,
         borderRadius: 6,
         padding: '8px 12px',
         marginBottom: 12,
@@ -922,7 +922,7 @@ export default function MockDataAdmin({
       }}>
         <Space>
           {isTemplateAdmin
-            ? <UnlockOutlined style={{ color: '#1677ff' }} />
+            ? <UnlockOutlined style={{ color: '#00437B' }} />
             : <LockOutlined style={{ color: '#8c8c8c' }} />
           }
           <span style={{ fontSize: 13 }}>

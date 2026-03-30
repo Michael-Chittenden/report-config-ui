@@ -1,6 +1,6 @@
 /* Demo banner */
 .demo-banner {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00437B 0%, #3465CD 100%);
   color: white;
   padding: 8px 24px;
   display: flex;
@@ -157,12 +157,12 @@
 }
 
 .dual-list-item:hover {
-  background: #e6f4ff;
+  background: #e8f0f8;
 }
 
 .dual-list-item.selected {
-  background: #e6f4ff;
-  color: #1677ff;
+  background: #e8f0f8;
+  color: #00437B;
 }
 
 .dual-list-actions {
@@ -296,13 +296,13 @@
 }
 
 .config-type-badge.single {
-  background: #e6f4ff;
-  color: #1677ff;
+  background: #e8f0f8;
+  color: #00437B;
 }
 
 .config-type-badge.multi {
-  background: #f6ffed;
-  color: #52c41a;
+  background: #edf6fb;
+  color: #3465CD;
 }
 
 /* Scrollbar styling */

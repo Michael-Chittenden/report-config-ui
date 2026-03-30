@@ -364,9 +364,9 @@ export default function ManagerGroupsSection({
                           style={{
                             padding: '10px 12px',
                             cursor: 'pointer',
-                            background: isActive ? '#e6f4ff' : 'white',
+                            background: isActive ? '#edf6fb' : 'white',
                             borderBottom: '1px solid #f5f5f5',
-                            borderLeft: isActive ? '3px solid #1677ff' : '3px solid transparent',
+                            borderLeft: isActive ? '3px solid #00437B' : '3px solid transparent',
                             transition: 'all 0.15s',
                           }}
                         >
