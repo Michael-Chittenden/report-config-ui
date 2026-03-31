@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Drawer, Tabs, Table, Button, Input, Select, Space, Tag, Popconfirm, Divider, Switch, Checkbox, message } from 'antd';
-import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined, LockOutlined, UnlockOutlined, HistoryOutlined } from '@ant-design/icons';
+import changelogRaw from '../../CHANGELOG.md?raw';
 
 const planTypes = ['DC', 'NQ', 'DB'];
 const vendors = ['Vanguard', 'Fidelity', 'TIAA', 'Schwab'];
@@ -900,6 +901,26 @@ export default function MockDataAdmin({
               No fund changes created yet. Select a plan and add fund changes.
             </div>
           )}
+        </div>
+      ),
+    },
+    {
+      key: 'changelog',
+      label: (
+        <span><HistoryOutlined style={{ marginRight: 4 }} />Changelog</span>
+      ),
+      children: (
+        <div style={{ maxHeight: 500, overflow: 'auto', fontSize: 13, lineHeight: 1.7 }}>
+          {changelogRaw.split('\n').map((line, i) => {
+            if (line.startsWith('# ')) return <h2 key={i} style={{ fontSize: 16, fontWeight: 700, color: '#00437B', marginTop: 0 }}>{line.slice(2)}</h2>;
+            if (line.startsWith('## ')) return <h3 key={i} style={{ fontSize: 15, fontWeight: 700, color: '#00437B', marginTop: 16, borderBottom: '1px solid #d9d9d9', paddingBottom: 4 }}>{line.slice(3)}</h3>;
+            if (line.startsWith('### ')) return <h4 key={i} style={{ fontSize: 14, fontWeight: 600, color: '#3465CD', marginTop: 12 }}>{line.slice(4)}</h4>;
+            if (line.startsWith('**') && line.endsWith('**')) return <div key={i} style={{ fontWeight: 700, marginTop: 10, color: '#3F3F3F' }}>{line.slice(2, -2)}</div>;
+            if (line.startsWith('- ')) return <div key={i} style={{ paddingLeft: 16, position: 'relative' }}><span style={{ position: 'absolute', left: 4 }}>&bull;</span>{line.slice(2)}</div>;
+            if (line.startsWith('---')) return <hr key={i} style={{ border: 'none', borderTop: '1px solid #d9d9d9', margin: '12px 0' }} />;
+            if (line.trim() === '') return <div key={i} style={{ height: 4 }} />;
+            return <div key={i}>{line}</div>;
+          })}
         </div>
       ),
     },

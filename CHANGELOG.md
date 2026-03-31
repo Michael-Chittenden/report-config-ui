@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] — 2026-03-31
+
+### Bulk Dashboard & Data Tracking
+
+**Bulk Run Dashboard**
+- Centralized view of all bulk-scheduled report configs across all clients
+- Columns: client, config name, type, plans, exhibit template, tier, investments, completed, data ready
+- Search and client filter, sortable columns
+- Shared config and shared exhibit template tags (purple "Shared" badge)
+- "Data Ready" and "Run Report" placeholders for future functionality
+- Client configs only (shared templates excluded from dashboard)
+
+**Investment Completion Tracking**
+- "Q Complete" checkbox per investment in Demo Data admin
+- "Completed" column on Bulk Dashboard shows X/Y (%) with color coding
+
+**Visual Rebrand**
+- CAPTRUST corporate color palette applied across all components
+- Primary: #00437B (dark navy), Secondary: #3465CD, Light: #5FB4E5, Plum: #5B325F, Teal: #7CA7AE
+- IRP logo in app header
+- Section group labels: Data Checks, Included Investments, Content, Scheduling
+
+**Export/Import Enhancements**
+- Now includes report configs, exhibit templates, and plan groups (previously missing)
+
+**Other Changes**
+- Asset Class | Managers section deactivated (commented for future use)
+- "Fund changes executed since last quarter" renamed to "executed in the past year"
+- npm audit fix: resolved brace-expansion and picomatch vulnerabilities
+
+---
+
 ## [1.2.0] — 2026-03-24
 
 ### Shared Config & Permission Enhancements
