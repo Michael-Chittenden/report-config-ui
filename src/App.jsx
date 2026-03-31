@@ -350,6 +350,9 @@ function App() {
         _planGroupId: config._planGroupId || null,
         _planGroupName: config._planGroupName || null,
         _planIds: config._planIds || null,
+        _selectedConfigIDs: config._selectedConfigIDs || null,
+        _aggregateFactSheets: config._aggregateFactSheets || false,
+        _replaceSpotlights: config._replaceSpotlights || false,
         _key: Date.now(),
       });
       setLoadCounter(prev => prev + 1);
@@ -375,6 +378,9 @@ function App() {
         _planGroupId: config._planGroupId || null,
         _planGroupName: config._planGroupName || null,
         _planIds: config._planIds || null,
+        _selectedConfigIDs: config._selectedConfigIDs || null,
+        _aggregateFactSheets: config._aggregateFactSheets || false,
+        _replaceSpotlights: config._replaceSpotlights || false,
         _key: Date.now(),
       });
       setLoadCounter(prev => prev + 1);
@@ -382,7 +388,7 @@ function App() {
     setLoadConfigOpen(false);
   };
 
-  const handleSaveConfig = ({ name, type, primary, shared, isUpdate, isAdHoc, adHocPeriod, associationOnly, ExhibitTemplateID, BulkRun, BulkTierOverrideID, BulkPctThresholdID, QDIACheckOptOut, CandidateInvestments, IncludeFundChanges, OptInAllFundChanges, FundChangesInProgress, FundChangesExecuted, _planGroupId, _planGroupName, _planIds }) => {
+  const handleSaveConfig = ({ name, type, primary, shared, isUpdate, isAdHoc, adHocPeriod, associationOnly, ExhibitTemplateID, BulkRun, BulkTierOverrideID, BulkPctThresholdID, QDIACheckOptOut, CandidateInvestments, IncludeFundChanges, OptInAllFundChanges, FundChangesInProgress, FundChangesExecuted, _planGroupId, _planGroupName, _planIds, SelectedConfigIDs, AggregateFactSheets, ReplaceSpotlights }) => {
     const configTypeId = type === 'CAPTRUST Shared' ? 1 : (configType === 'single' ? 1 : configType === 'multi' ? 2 : configType === 'combo' ? 3 : 4);
     const planId = configType === 'single' ? selectedPlan : null;
 
@@ -419,6 +425,9 @@ function App() {
               _planGroupId: _planGroupId !== undefined ? _planGroupId : c._planGroupId,
               _planGroupName: _planGroupName !== undefined ? _planGroupName : c._planGroupName,
               _planIds: _planIds !== undefined ? _planIds : c._planIds,
+              _selectedConfigIDs: SelectedConfigIDs !== undefined ? SelectedConfigIDs : c._selectedConfigIDs,
+              _aggregateFactSheets: AggregateFactSheets !== undefined ? AggregateFactSheets : c._aggregateFactSheets,
+              _replaceSpotlights: ReplaceSpotlights !== undefined ? ReplaceSpotlights : c._replaceSpotlights,
             };
           }
           return c;
@@ -465,6 +474,9 @@ function App() {
         _planGroupId: _planGroupId || null,
         _planGroupName: _planGroupName || null,
         _planIds: _planIds || null,
+        _selectedConfigIDs: SelectedConfigIDs || null,
+        _aggregateFactSheets: AggregateFactSheets || false,
+        _replaceSpotlights: ReplaceSpotlights || false,
       };
 
       setAllConfigs(prev => {
@@ -710,6 +722,9 @@ function App() {
           if (fallbackGroup) return { _planGroupId: fallbackGroup.ReportPlanGroupID, _planGroupName: fallbackGroup.ReportPlanGroupName, _planIds: fallbackGroup.ct_PlanIDs };
           return { _planGroupId: null, _planGroupName: null, _planIds: null };
         })(),
+        _selectedConfigIDs: primaryForType._selectedConfigIDs || null,
+        _aggregateFactSheets: primaryForType._aggregateFactSheets || false,
+        _replaceSpotlights: primaryForType._replaceSpotlights || false,
         _autoLoad: true,
         _key: Date.now(),
       });
@@ -1024,6 +1039,7 @@ function App() {
         {configType === 'combo' && (
           <ComboConfig
             period={period}
+            loadedConfig={loadedConfig}
             allConfigs={allConfigs}
             allPlans={allPlans}
             allPlanGroups={allPlanGroups}

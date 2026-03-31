@@ -467,6 +467,7 @@ export const pagesets = [
   { id: 'ps-65', name: 'Multi Plan Menu', categoryId: 3, isTab: false },
 
   // Category 4: COMBO (Client) - Specific Pages
+  { id: 'ps-69', name: 'COMBO Title Page', categoryId: 4, isTab: false },
   { id: 'ps-70', name: 'COMBO Fact Sheets', categoryId: 4, isTab: false },
   { id: 'ps-71', name: 'At Work - Table of Contents', categoryId: 4, isTab: false },
   { id: 'ps-72', name: 'At Work - Goals and Objectives', categoryId: 4, isTab: false },

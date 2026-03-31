@@ -28,17 +28,34 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
   // All configs with BulkRun enabled
   const bulkConfigs = useMemo(() => {
     return allConfigs
-      .filter(c => c.BulkRun && c.AccountID != null)
+      .filter(c => c.BulkRun && c.AccountID != null && !c._isAdHoc)
       .map(c => {
         const client = c.AccountID
           ? allClients.find(cl => cl.accountId === c.AccountID)
           : null;
         const clientName = client ? client.name : (c.AccountID === null || c.AccountID === undefined) ? 'CAPTRUST Shared' : 'Unknown';
 
-        // Resolve plan names
+        // Resolve plan names and child config names
         let planNames = [];
         let planIds = [];
-        if (c.ct_PlanID) {
+        let childConfigNames = [];
+        if (c.ReportConfigType === 3 && c._selectedConfigIDs?.length > 0) {
+          // Combo — resolve plans from child configs
+          const childConfigs = c._selectedConfigIDs
+            .map(id => allConfigs.find(cc => cc.ReportConfigID === id))
+            .filter(Boolean);
+          childConfigNames = childConfigs.map(cc => cc.ReportConfigName);
+          const planIdSet = new Set();
+          childConfigs.forEach(cc => {
+            if (cc.ct_PlanID) planIdSet.add(cc.ct_PlanID);
+            if (cc._planIds) cc._planIds.forEach(id => planIdSet.add(id));
+          });
+          planIds = [...planIdSet];
+          planNames = planIds.map(id => {
+            const plan = allPlans.find(p => p.ct_PlanID === id);
+            return plan ? plan.name : `Plan ${id}`;
+          });
+        } else if (c.ct_PlanID) {
           planIds = [c.ct_PlanID];
           const plan = allPlans.find(p => p.ct_PlanID === c.ct_PlanID);
           planNames = plan ? [plan.name] : [`Plan ${c.ct_PlanID}`];
@@ -105,6 +122,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
           clientName,
           planNames,
           planIds,
+          childConfigNames,
           investmentCount,
           completedCount,
           isUsingSharedConfig,
@@ -220,22 +238,35 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       ),
     },
     {
-      title: 'Plans',
-      dataIndex: 'planNames',
+      title: 'Plans / Configs',
       key: 'plans',
-      width: 160,
-      render: (names) => {
-        if (!names || names.length === 0) return <span style={{ color: '#8c8c8c', fontSize: 12 }}>Shared — all eligible</span>;
-        if (names.length <= 2) {
-          return names.map((n, i) => <Tag key={i} style={{ fontSize: 11, margin: '1px 2px' }}>{n}</Tag>);
-        }
+      width: 200,
+      render: (_, record) => {
+        const names = record.planNames;
         return (
-          <Tooltip title={names.join(', ')}>
-            <span>
-              <Tag style={{ fontSize: 11 }}>{names[0]}</Tag>
-              <Tag style={{ fontSize: 11, color: '#8c8c8c' }}>+{names.length - 1} more</Tag>
-            </span>
-          </Tooltip>
+          <div>
+            {/* For combos, show child config names */}
+            {record.childConfigNames?.length > 0 && (
+              <div style={{ marginBottom: 4 }}>
+                {record.childConfigNames.map((n, i) => (
+                  <Tag key={`cfg-${i}`} color="geekblue" style={{ fontSize: 10, margin: '1px 2px' }}>{n}</Tag>
+                ))}
+              </div>
+            )}
+            {/* Plan names */}
+            {(!names || names.length === 0) ? (
+              <span style={{ color: '#8c8c8c', fontSize: 12 }}>No plans resolved</span>
+            ) : names.length <= 3 ? (
+              names.map((n, i) => <Tag key={i} style={{ fontSize: 11, margin: '1px 2px' }}>{n}</Tag>)
+            ) : (
+              <Tooltip title={names.join(', ')}>
+                <span>
+                  {names.slice(0, 2).map((n, i) => <Tag key={i} style={{ fontSize: 11, margin: '1px 2px' }}>{n}</Tag>)}
+                  <Tag style={{ fontSize: 11, color: '#8c8c8c', margin: '1px 2px' }}>+{names.length - 2} more</Tag>
+                </span>
+              </Tooltip>
+            )}
+          </div>
         );
       },
     },

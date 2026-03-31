@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Tag, Button, Alert, Checkbox, Space } from 'antd';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Tag, Button, Alert, Checkbox, Space, message } from 'antd';
 import { MergeCellsOutlined, StarFilled, SwapOutlined, AppstoreOutlined, CheckCircleOutlined, WarningFilled, FilterOutlined } from '@ant-design/icons';
 import { reportConfigTypes, pagesets } from '../data/mockData';
 import { resolveExhibitPageSetIds } from '../data/dataResolvers';
@@ -14,6 +14,7 @@ const emptyManagerGroups = [
 
 export default function ComboConfig({
   period,
+  loadedConfig,
   allConfigs = [],
   allPlans = [],
   allPlanGroups = [],
@@ -85,6 +86,46 @@ export default function ComboConfig({
   const [bulkUnlocked, setBulkUnlocked] = useState(false);
   const [bulkTierOverrideId, setBulkTierOverrideId] = useState(null);
   const [bulkPctThresholdId, setBulkPctThresholdId] = useState(null);
+
+  const lastToastedConfigRef = useRef(null);
+
+  // --- Restore state from loaded config ---
+  useEffect(() => {
+    if (!loadedConfig) return;
+
+    // Restore child config selections
+    if (loadedConfig._selectedConfigIDs && loadedConfig._selectedConfigIDs.length > 0) {
+      const selectedIds = new Set(loadedConfig._selectedConfigIDs);
+      const restored = comboEligibleConfigs.filter(c => selectedIds.has(c.ReportConfigID));
+      const remaining = comboEligibleConfigs.filter(c => !selectedIds.has(c.ReportConfigID));
+      setSelectedConfigs(restored);
+      setAvailableConfigs(remaining);
+    }
+
+    // Restore combo options
+    setAggregateFactSheets(loadedConfig._aggregateFactSheets ?? false);
+    setReplaceSpotlights(loadedConfig._replaceSpotlights ?? false);
+
+    // Restore exhibit template
+    setSelectedExhibitIds(loadedConfig.selectedExhibitIds ?? []);
+    setExhibitTemplateName(loadedConfig.exhibitTemplateName ?? null);
+    setExhibitTemplateId(loadedConfig.exhibitTemplate?.ExhibitTemplateID ?? null);
+    setExhibitCategoryId(loadedConfig.exhibitCategoryId ?? 1);
+
+    // Restore bulk run
+    setIncludeInBulk(loadedConfig.includeInBulk ?? true);
+    setBulkUnlocked(loadedConfig.bulkUnlocked ?? false);
+    setBulkTierOverrideId(loadedConfig.bulkTierOverrideId ?? null);
+    setBulkPctThresholdId(loadedConfig.bulkPctThresholdId ?? null);
+
+    const toastKey = loadedConfig.ReportConfigID || loadedConfig._key;
+    if (!loadedConfig._autoLoad && lastToastedConfigRef.current !== toastKey) {
+      lastToastedConfigRef.current = toastKey;
+      const parts = ['Report configuration'];
+      if (loadedConfig.exhibitTemplateName) parts.push(`exhibit template "${loadedConfig.exhibitTemplateName}"`);
+      message.success(`${parts.join(' and ')} loaded`);
+    }
+  }, [loadedConfig]);
 
   // Build report plans for Run Now preview — resolve plans from all selected child configs
   const comboReportPlans = useMemo(() => {
@@ -415,6 +456,7 @@ export default function ComboConfig({
         allTemplates={allTemplates}
         isTemplateAdmin={isTemplateAdmin}
         allPlans={allPlans}
+        childConfigExhibits={childConfigExhibits}
         liveState={{
           ExhibitTemplateID: exhibitTemplateId,
           BulkRun: includeInBulk,

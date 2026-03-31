@@ -92,6 +92,7 @@ export default function SaveConfigSection({
   isTemplateAdmin = false,
   allPlans = [],
   otherPlansUsingConfig = [],
+  childConfigExhibits = [],
 }) {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [runNowModalOpen, setRunNowModalOpen] = useState(false);
@@ -318,7 +319,7 @@ export default function SaveConfigSection({
                 </div>
               )}
 
-              {/* Exhibit Pages */}
+              {/* Exhibit Pages — combo's own template */}
               {exhibitPages.length > 0 && (
                 <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 4 }}>
                   <div style={{ background: '#fafafa', padding: '8px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -334,6 +335,30 @@ export default function SaveConfigSection({
                   </div>
                 </div>
               )}
+
+              {/* Child config exhibits (combo only) */}
+              {childConfigExhibits.length > 0 && childConfigExhibits.map((child, idx) => (
+                <div key={idx} style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 8 }}>
+                  <div style={{ background: '#fafafa', padding: '6px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                    <UnorderedListOutlined style={{ color: '#3465CD' }} />
+                    <strong>{child.configName}</strong>
+                    {child.templateName && (
+                      <span style={{ color: '#8c8c8c' }}>
+                        — {child.templateName}
+                        {child.isShared && <Tag color="purple" style={{ fontSize: 10, marginLeft: 4 }}>Shared</Tag>}
+                      </span>
+                    )}
+                    <Tag style={{ marginLeft: 'auto', fontSize: 10 }}>{child.pages.length} pages</Tag>
+                  </div>
+                  <div style={{ padding: '6px 12px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {child.pages.map((page, i) => (
+                      <Tag key={page.id || i} color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
+                        {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                      </Tag>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           ),
         });
