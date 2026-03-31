@@ -809,6 +809,7 @@ function App() {
             investments={investments}
             allTemplates={allTemplates}
             allFundChanges={allFundChanges}
+            planConfigMap={planConfigMap}
             onClose={() => setDashboardOpen(false)}
           />
         ) : (

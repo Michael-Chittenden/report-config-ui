@@ -20,20 +20,47 @@ import {
 import { bulkTierOverrides, bulkPctThresholds, reportConfigTypes, pagesets } from '../data/mockData';
 import { resolveExhibitPageSetIds } from '../data/dataResolvers';
 
-export default function BulkDashboard({ allConfigs = [], allClients = [], allPlans = [], investments = [], allTemplates = [], allFundChanges = [], onClose }) {
+export default function BulkDashboard({ allConfigs = [], allClients = [], allPlans = [], investments = [], allTemplates = [], allFundChanges = [], planConfigMap = {}, onClose }) {
   const [search, setSearch] = useState('');
   const [clientFilter, setClientFilter] = useState(null);
   const [reviewConfig, setReviewConfig] = useState(null);
 
-  // All configs with BulkRun enabled
+  // Shared config IDs actively assigned to plans
+  const assignedSharedConfigIds = useMemo(() => {
+    const ids = new Set();
+    Object.values(planConfigMap).forEach(configId => {
+      const cfg = allConfigs.find(c => c.ReportConfigID === configId);
+      if (cfg && (cfg.AccountID === null || cfg.AccountID === undefined) && cfg.BulkRun) {
+        ids.add(configId);
+      }
+    });
+    return ids;
+  }, [planConfigMap, allConfigs]);
+
+  // All configs with BulkRun enabled — client configs + shared configs assigned to plans
   const bulkConfigs = useMemo(() => {
     return allConfigs
-      .filter(c => c.BulkRun && c.AccountID != null && !c._isAdHoc)
+      .filter(c => c.BulkRun && !c._isAdHoc && (c.AccountID != null || assignedSharedConfigIds.has(c.ReportConfigID)))
       .map(c => {
-        const client = c.AccountID
-          ? allClients.find(cl => cl.accountId === c.AccountID)
-          : null;
-        const clientName = client ? client.name : (c.AccountID === null || c.AccountID === undefined) ? 'CAPTRUST Shared' : 'Unknown';
+        // For shared configs, resolve the client from planConfigMap
+        let client = null;
+        let resolvedAccountId = c.AccountID;
+        if (c.AccountID != null) {
+          client = allClients.find(cl => cl.accountId === c.AccountID);
+        } else {
+          // Find which plans use this shared config and resolve their client
+          const assignedPlanIds = Object.entries(planConfigMap)
+            .filter(([, cfgId]) => cfgId === c.ReportConfigID)
+            .map(([planId]) => Number(planId));
+          if (assignedPlanIds.length > 0) {
+            const plan = allPlans.find(p => assignedPlanIds.includes(p.ct_PlanID));
+            if (plan) {
+              client = allClients.find(cl => cl.accountId === plan.accountId);
+              resolvedAccountId = plan.accountId;
+            }
+          }
+        }
+        const clientName = client ? client.name : 'CAPTRUST Shared';
 
         // Resolve plan names and child config names
         let planNames = [];
@@ -59,6 +86,16 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
           planIds = [c.ct_PlanID];
           const plan = allPlans.find(p => p.ct_PlanID === c.ct_PlanID);
           planNames = plan ? [plan.name] : [`Plan ${c.ct_PlanID}`];
+        } else if (c.AccountID == null) {
+          // Shared config — resolve plans from planConfigMap
+          const assignedPlanIds = Object.entries(planConfigMap)
+            .filter(([, cfgId]) => cfgId === c.ReportConfigID)
+            .map(([planId]) => Number(planId));
+          planIds = assignedPlanIds;
+          planNames = assignedPlanIds.map(id => {
+            const plan = allPlans.find(p => p.ct_PlanID === id);
+            return plan ? plan.name : `Plan ${id}`;
+          });
         } else if (c._planIds && c._planIds.length > 0) {
           planIds = c._planIds;
           planNames = c._planIds.map(id => {
@@ -74,22 +111,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
         const investmentCount = planInvestments.length;
         const completedCount = planInvestments.filter(inv => inv.quarterComplete).length;
 
-        // Check if using a shared report config (via ParentReportConfigID or defaultConfigId linkage)
-        // For this dashboard, a config is "shared-based" if it was originally a CAPTRUST shared config
-        // We detect this by checking if there's a shared config with the same name pattern
-        const isUsingSharedConfig = (() => {
-          if (c.ParentReportConfigID) {
-            const parent = allConfigs.find(pc => pc.ReportConfigID === c.ParentReportConfigID);
-            return parent && (parent.AccountID === null || parent.AccountID === undefined);
-          }
-          // Check if a shared config exists with this name (minus client-specific suffixes)
-          const sharedMatch = allConfigs.find(sc =>
-            (sc.AccountID === null || sc.AccountID === undefined) &&
-            sc.ReportConfigID !== c.ReportConfigID &&
-            c.ReportConfigName.includes(sc.ReportConfigName)
-          );
-          return !!sharedMatch;
-        })();
+        const isUsingSharedConfig = c.AccountID === null || c.AccountID === undefined;
 
         // Resolve exhibit template and its pages
         const template = c.ExhibitTemplateID
@@ -120,6 +142,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
           key: c.ReportConfigID,
           ...c,
           clientName,
+          resolvedAccountId,
           planNames,
           planIds,
           childConfigNames,
@@ -140,7 +163,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
   // Apply filters
   const filteredConfigs = useMemo(() => {
     return bulkConfigs.filter(c => {
-      if (clientFilter && c.AccountID !== clientFilter) return false;
+      if (clientFilter && (c.resolvedAccountId || c.AccountID) !== clientFilter) return false;
       if (search) {
         const s = search.toLowerCase();
         if (
@@ -158,11 +181,12 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
     const seen = new Set();
     return bulkConfigs
       .filter(c => {
-        if (!c.AccountID || seen.has(c.AccountID)) return false;
-        seen.add(c.AccountID);
+        const acctId = c.resolvedAccountId || c.AccountID;
+        if (!acctId || seen.has(acctId)) return false;
+        seen.add(acctId);
         return true;
       })
-      .map(c => ({ value: c.AccountID, label: c.clientName }));
+      .map(c => ({ value: c.resolvedAccountId || c.AccountID, label: c.clientName }));
   }, [bulkConfigs]);
 
   // Summary stats
