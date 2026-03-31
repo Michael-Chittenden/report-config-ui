@@ -80,7 +80,10 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
           : null;
         const exhibitTemplateName = template ? template.Name : null;
         const isSharedTemplate = template && (template.AccountID === null || template.AccountID === undefined);
-        const exhibitPageIds = c.ExhibitTemplateID ? resolveExhibitPageSetIds(c.ExhibitTemplateID) : [];
+        // Get exhibit pages — check template._sessionIds first (user-saved), fall back to seed junction table
+        const exhibitPageIds = template?._sessionIds?.length > 0
+          ? template._sessionIds
+          : (c.ExhibitTemplateID ? resolveExhibitPageSetIds(c.ExhibitTemplateID) : []);
         const exhibitPages = exhibitPageIds.map(id => pagesets.find(p => p.id === id)).filter(Boolean);
 
         // Resolve fund changes for these plans
@@ -173,7 +176,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       title: 'Client',
       dataIndex: 'clientName',
       key: 'client',
-      width: 160,
+      width: 140,
       sorter: (a, b) => a.clientName.localeCompare(b.clientName),
       render: (name) => (
         <span style={{ fontWeight: 600, fontSize: 13 }}>{name}</span>
@@ -202,7 +205,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       title: 'Type',
       dataIndex: 'ReportConfigType',
       key: 'type',
-      width: 120,
+      width: 100,
       filters: [
         { text: 'Single Plan', value: 1 },
         { text: 'Multi Plan', value: 2 },
@@ -220,7 +223,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       title: 'Plans',
       dataIndex: 'planNames',
       key: 'plans',
-      width: 200,
+      width: 160,
       render: (names) => {
         if (!names || names.length === 0) return <span style={{ color: '#8c8c8c', fontSize: 12 }}>Shared — all eligible</span>;
         if (names.length <= 2) {
@@ -239,7 +242,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
     {
       title: 'Exhibit Template',
       key: 'exhibit',
-      width: 180,
+      width: 160,
       render: (_, record) => {
         if (!record.exhibitTemplateName) return <span style={{ color: '#d9d9d9', fontSize: 12 }}>None</span>;
         return (
@@ -256,7 +259,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       title: 'Tier',
       dataIndex: 'tierName',
       key: 'tier',
-      width: 120,
+      width: 100,
       sorter: (a, b) => a.tierName.localeCompare(b.tierName),
       render: (name) => (
         <Tag color={name === 'Default' ? 'default' : 'blue'} style={{ fontSize: 11 }}>
@@ -269,7 +272,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       title: 'Investments',
       dataIndex: 'investmentCount',
       key: 'investments',
-      width: 100,
+      width: 80,
       sorter: (a, b) => a.investmentCount - b.investmentCount,
       render: (count) => (
         <span style={{ fontSize: 13, fontWeight: 600 }}>{count}</span>
@@ -278,7 +281,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
     {
       title: 'Completed',
       key: 'completed',
-      width: 110,
+      width: 90,
       sorter: (a, b) => a.completedCount - b.completedCount,
       render: (_, record) => {
         const pct = record.investmentCount > 0 ? Math.round((record.completedCount / record.investmentCount) * 100) : 0;
@@ -293,9 +296,9 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       },
     },
     {
-      title: 'Report Status',
+      title: 'Status',
       key: 'reportStatus',
-      width: 110,
+      width: 100,
       filters: [
         { text: 'Completed', value: 'Completed' },
         { text: 'Pending', value: 'Pending' },
@@ -316,7 +319,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
     {
       title: '',
       key: 'action',
-      width: 100,
+      width: 80,
       render: (_, record) => (
         <Button
           size="small"

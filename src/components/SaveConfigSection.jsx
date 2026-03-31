@@ -113,9 +113,13 @@ export default function SaveConfigSection({
   // Resolve exhibit pages for the current template
   const exhibitPages = useMemo(() => {
     if (!liveState?.ExhibitTemplateID) return [];
-    const ids = resolveExhibitPageSetIds(liveState.ExhibitTemplateID);
+    // Check template._sessionIds first (user-saved), fall back to seed junction table
+    const template = allTemplates?.find(t => t.ExhibitTemplateID === liveState.ExhibitTemplateID);
+    const ids = template?._sessionIds?.length > 0
+      ? template._sessionIds
+      : resolveExhibitPageSetIds(liveState.ExhibitTemplateID);
     return ids.map(id => pagesets.find(p => p.id === id)).filter(Boolean);
-  }, [liveState?.ExhibitTemplateID]);
+  }, [liveState?.ExhibitTemplateID, allTemplates]);
 
   // Detect if the active config is a CAPTRUST-wide shared config (AccountID === null)
   const isSharedConfig = savedConfigRecord && (savedConfigRecord.AccountID === null || savedConfigRecord.AccountID === undefined);

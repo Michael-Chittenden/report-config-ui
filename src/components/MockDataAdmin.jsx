@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Drawer, Tabs, Table, Button, Input, Select, Space, Tag, Popconfirm, Divider, Switch, Checkbox, message } from 'antd';
-import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined, LockOutlined, UnlockOutlined, HistoryOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined, LockOutlined, UnlockOutlined, HistoryOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { pagesets as seedPagesets, pagesetCategories } from '../data/mockData';
 import changelogRaw from '../../CHANGELOG.md?raw';
 
 const planTypes = ['DC', 'NQ', 'DB'];
@@ -903,6 +904,46 @@ export default function MockDataAdmin({
           )}
         </div>
       ),
+    },
+    {
+      key: 'pagesets',
+      label: (
+        <span><UnorderedListOutlined style={{ marginRight: 4 }} />Pagesets ({seedPagesets.length})</span>
+      ),
+      children: (() => {
+        const grouped = pagesetCategories.map(cat => ({
+          ...cat,
+          items: seedPagesets.filter(p => p.categoryId === cat.id),
+        }));
+        return (
+          <div style={{ maxHeight: 500, overflow: 'auto' }}>
+            {grouped.map(cat => (
+              <div key={cat.id} style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: '#00437B', marginBottom: 6, borderBottom: '1px solid #d9d9d9', paddingBottom: 4 }}>
+                  {cat.name}
+                  <Tag style={{ marginLeft: 8, fontSize: 10 }}>{cat.items.length}</Tag>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {cat.items.map(page => (
+                    <Tag key={page.id} color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
+                      {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                    </Tag>
+                  ))}
+                  {cat.items.length === 0 && (
+                    <span style={{ fontSize: 12, color: '#8c8c8c' }}>No pagesets in this category</span>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div style={{ marginTop: 16, padding: 12, background: '#fafafa', borderRadius: 6, border: '1px solid #d9d9d9' }}>
+              <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 8 }}>
+                Pagesets are defined in the seed data. In production, these would be managed via a database admin tool.
+                Contact the development team to add new pagesets or modify categories.
+              </div>
+            </div>
+          </div>
+        );
+      })(),
     },
     {
       key: 'changelog',

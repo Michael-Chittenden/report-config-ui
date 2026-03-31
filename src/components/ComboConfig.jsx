@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Tag, Button, Alert, Checkbox, Space } from 'antd';
-import { MergeCellsOutlined, StarFilled, SwapOutlined, AppstoreOutlined, CheckCircleOutlined, WarningFilled } from '@ant-design/icons';
-import { reportConfigTypes } from '../data/mockData';
+import { MergeCellsOutlined, StarFilled, SwapOutlined, AppstoreOutlined, CheckCircleOutlined, WarningFilled, FilterOutlined } from '@ant-design/icons';
+import { reportConfigTypes, pagesets } from '../data/mockData';
+import { resolveExhibitPageSetIds } from '../data/dataResolvers';
 import DualListBox from './DualListBox';
 import ExhibitMenuSection from './ExhibitMenuSection';
 import BulkRunSection from './BulkRunSection';
@@ -69,6 +70,7 @@ export default function ComboConfig({
 
   const [selectedConfigs, setSelectedConfigs] = useState([]);
   const [availableConfigs, setAvailableConfigs] = useState(comboEligibleConfigs);
+  const [primaryOnlyFilter, setPrimaryOnlyFilter] = useState(false);
   const [aggregateFactSheets, setAggregateFactSheets] = useState(false);
   const [replaceSpotlights, setReplaceSpotlights] = useState(false);
 
@@ -125,6 +127,31 @@ export default function ComboConfig({
     });
   }, [selectedConfigs, allPlans, allInvestments, allPlanGroups]);
 
+  // Resolve exhibit pages from each child config's exhibit template
+  const childConfigExhibits = useMemo(() => {
+    return selectedConfigs.map(config => {
+      const template = config.ExhibitTemplateID
+        ? allTemplates.find(t => t.ExhibitTemplateID === config.ExhibitTemplateID)
+        : null;
+      const pageIds = template?._sessionIds?.length > 0
+        ? template._sessionIds
+        : (config.ExhibitTemplateID ? resolveExhibitPageSetIds(config.ExhibitTemplateID) : []);
+      const pages = pageIds.map(id => pagesets.find(p => p.id === id)).filter(Boolean);
+      return {
+        configName: config.ReportConfigName,
+        templateName: template?.Name || null,
+        isShared: template && (template.AccountID === null || template.AccountID === undefined),
+        pages,
+      };
+    }).filter(c => c.pages.length > 0);
+  }, [selectedConfigs, allTemplates]);
+
+  // Filtered available configs (primary only toggle)
+  const filteredAvailable = useMemo(() => {
+    if (!primaryOnlyFilter) return availableConfigs;
+    return availableConfigs.filter(c => c.Primary);
+  }, [availableConfigs, primaryOnlyFilter]);
+
   // Detect duplicate plans across selected configs
   const duplicatePlans = useMemo(() => {
     const planConfigMap = {}; // planId → [{ configName, planName }]
@@ -178,12 +205,29 @@ export default function ComboConfig({
           </h3>
         </div>
         <div className="section-body">
+          <div style={{ marginBottom: 8 }}>
+            <Checkbox
+              checked={primaryOnlyFilter}
+              onChange={(e) => setPrimaryOnlyFilter(e.target.checked)}
+            >
+              <span style={{ fontSize: 12 }}>
+                <FilterOutlined style={{ marginRight: 4 }} />
+                Show Primary configs only
+              </span>
+            </Checkbox>
+          </div>
           <DualListBox
             selectedItems={selectedConfigs}
-            availableItems={availableConfigs}
-            onSelectedChange={handleDualListChange}
+            availableItems={filteredAvailable}
+            onSelectedChange={(newSelected, newAvailable) => {
+              setSelectedConfigs(newSelected);
+              // Merge filtered-out items back into available
+              const filteredIds = new Set(filteredAvailable.map(c => c.id));
+              const hidden = availableConfigs.filter(c => !filteredIds.has(c.id));
+              setAvailableConfigs([...hidden, ...newAvailable]);
+            }}
             selectedTitle="Current Configs"
-            availableTitle="Available Report Configs"
+            availableTitle={`Available Report Configs${primaryOnlyFilter ? ' (Primary)' : ''}`}
             renderItem={(config) => (
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <span>{config.ReportConfigName}</span>
@@ -286,6 +330,41 @@ export default function ComboConfig({
           </div>
         </div>
       ))}
+
+      {/* Child config exhibit pages */}
+      {childConfigExhibits.length > 0 && (
+        <div className="config-section">
+          <div className="section-header">
+            <h3>
+              <AppstoreOutlined />
+              Child Config Exhibits
+              <Tag style={{ marginLeft: 8, fontSize: 11 }}>{childConfigExhibits.reduce((sum, c) => sum + c.pages.length, 0)} pages</Tag>
+            </h3>
+          </div>
+          <div className="section-body">
+            {childConfigExhibits.map((child, idx) => (
+              <div key={idx} style={{ marginBottom: idx < childConfigExhibits.length - 1 ? 12 : 0, border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ background: '#fafafa', padding: '6px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                  <strong>{child.configName}</strong>
+                  {child.templateName && (
+                    <span style={{ color: '#8c8c8c' }}>
+                      — {child.templateName}
+                      {child.isShared && <Tag color="purple" style={{ fontSize: 10, marginLeft: 4 }}>Shared</Tag>}
+                    </span>
+                  )}
+                </div>
+                <div style={{ padding: '6px 12px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {child.pages.map((page, i) => (
+                    <Tag key={page.id || i} color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
+                      {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <ExhibitMenuSection
         configType="combo"
