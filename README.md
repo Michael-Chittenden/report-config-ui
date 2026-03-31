@@ -2,37 +2,35 @@
 
 Interactive prototype for the CAPTRUST Institutional Reporting Platform (IRP) Report Configuration module.
 
-## Quick Start
+## Setup Instructions
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) 18 or later
-- [Git](https://git-scm.com/)
+### Step 1: Install Git
+1. Download from https://git-scm.com/download/win
+2. Install with defaults
 
-### Setup
-```bash
+### Step 2: Install Node.js (Portable)
+1. Download the Node.js standalone binary (.zip) from https://nodejs.org/en/download
+2. Create a `C:\Node` folder
+3. Unzip the contents of the `win-x64` folder to `C:\Node`
+
+### Step 3: Clone and Run
+1. Create a `C:\Git` folder on your C drive
+2. Open Command Prompt and run:
+```cmd
+cd C:\Git
 git clone https://github.com/Michael-Chittenden/report-config-ui.git
 cd report-config-ui
-npm install
-npm run dev
+C:\node\npm install
+C:\node\npm run dev
 ```
+3. Open http://localhost:5173 in your browser
 
-Open http://localhost:5173 in your browser (port may vary if 5173 is in use).
-
-### Portable Node.js (Restricted Machines)
-If you cannot install Node.js via the standard installer:
-1. Download the **Windows Binary (.zip)** from [nodejs.org](https://nodejs.org/en/download)
-2. Extract to `C:\node`
-3. Open a command prompt and run:
+### Updating to Latest
 ```cmd
-set PATH=C:\node;%PATH%
-```
-4. Then proceed with `npm install` and `npm run dev` as above
-
-## Keeping Up to Date
-```bash
+cd C:\Git\report-config-ui
 git pull
-npm install   # only needed if package.json changed
-npm run dev
+C:\node\npm install
+C:\node\npm run dev
 ```
 
 ## What This Is
