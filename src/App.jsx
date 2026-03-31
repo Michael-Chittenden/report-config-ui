@@ -787,6 +787,7 @@ function App() {
             allPlans={allPlans}
             investments={investments}
             allTemplates={allTemplates}
+            allFundChanges={allFundChanges}
             onClose={() => setDashboardOpen(false)}
           />
         ) : (

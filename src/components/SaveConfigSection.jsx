@@ -13,8 +13,10 @@ import {
   FileTextOutlined,
   TeamOutlined,
   ExperimentOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
-import { bulkTierOverrides, bulkPctThresholds } from '../data/mockData';
+import { bulkTierOverrides, bulkPctThresholds, pagesets } from '../data/mockData';
+import { resolveExhibitPageSetIds } from '../data/dataResolvers';
 
 // Human-readable labels for changed fields
 function describeChange(field, oldVal, newVal, { templateLookup } = {}) {
@@ -107,6 +109,13 @@ export default function SaveConfigSection({
 
   const hasActiveConfig = !!activeConfigId;
   const hasExhibitTemplate = !!(liveState && liveState.ExhibitTemplateID);
+
+  // Resolve exhibit pages for the current template
+  const exhibitPages = useMemo(() => {
+    if (!liveState?.ExhibitTemplateID) return [];
+    const ids = resolveExhibitPageSetIds(liveState.ExhibitTemplateID);
+    return ids.map(id => pagesets.find(p => p.id === id)).filter(Boolean);
+  }, [liveState?.ExhibitTemplateID]);
 
   // Detect if the active config is a CAPTRUST-wide shared config (AccountID === null)
   const isSharedConfig = savedConfigRecord && (savedConfigRecord.AccountID === null || savedConfigRecord.AccountID === undefined);
@@ -302,6 +311,23 @@ export default function SaveConfigSection({
               {reportPlans.length === 0 && (
                 <div style={{ textAlign: 'center', padding: 20, color: '#8c8c8c', fontSize: 13 }}>
                   No plans configured for this report.
+                </div>
+              )}
+
+              {/* Exhibit Pages */}
+              {exhibitPages.length > 0 && (
+                <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 4 }}>
+                  <div style={{ background: '#fafafa', padding: '8px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <UnorderedListOutlined style={{ color: '#3465CD' }} />
+                    <strong style={{ fontSize: 13 }}>Exhibits ({exhibitPages.length})</strong>
+                  </div>
+                  <div style={{ padding: '8px 12px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {exhibitPages.map((page, i) => (
+                      <Tag key={page.id || i} color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
+                        {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                      </Tag>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

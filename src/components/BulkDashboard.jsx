@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Table, Tag, Input, Select, Space, Button, Tooltip, Badge } from 'antd';
+import { Table, Tag, Input, Select, Space, Button, Tooltip, Badge, Modal } from 'antd';
 import {
   DashboardOutlined,
   SearchOutlined,
@@ -12,12 +12,18 @@ import {
   AppstoreOutlined,
   ArrowLeftOutlined,
   CheckCircleOutlined,
+  EyeOutlined,
+  SwapOutlined,
+  ExperimentOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
-import { bulkTierOverrides, bulkPctThresholds, reportConfigTypes } from '../data/mockData';
+import { bulkTierOverrides, bulkPctThresholds, reportConfigTypes, pagesets } from '../data/mockData';
+import { resolveExhibitPageSetIds } from '../data/dataResolvers';
 
-export default function BulkDashboard({ allConfigs = [], allClients = [], allPlans = [], investments = [], allTemplates = [], onClose }) {
+export default function BulkDashboard({ allConfigs = [], allClients = [], allPlans = [], investments = [], allTemplates = [], allFundChanges = [], onClose }) {
   const [search, setSearch] = useState('');
   const [clientFilter, setClientFilter] = useState(null);
+  const [reviewConfig, setReviewConfig] = useState(null);
 
   // All configs with BulkRun enabled
   const bulkConfigs = useMemo(() => {
@@ -68,12 +74,19 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
           return !!sharedMatch;
         })();
 
-        // Resolve exhibit template
+        // Resolve exhibit template and its pages
         const template = c.ExhibitTemplateID
           ? allTemplates.find(t => t.ExhibitTemplateID === c.ExhibitTemplateID)
           : null;
         const exhibitTemplateName = template ? template.Name : null;
         const isSharedTemplate = template && (template.AccountID === null || template.AccountID === undefined);
+        const exhibitPageIds = c.ExhibitTemplateID ? resolveExhibitPageSetIds(c.ExhibitTemplateID) : [];
+        const exhibitPages = exhibitPageIds.map(id => pagesets.find(p => p.id === id)).filter(Boolean);
+
+        // Resolve fund changes for these plans
+        const planFundChanges = planIds.length > 0
+          ? allFundChanges.filter(fc => planIds.includes(fc.ct_PlanID))
+          : [];
 
         // Tier and threshold lookups
         const tierName = c.BulkTierOverrideID
@@ -94,6 +107,8 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
           isUsingSharedConfig,
           exhibitTemplateName,
           isSharedTemplate,
+          exhibitPages,
+          planFundChanges,
           tierName,
           thresholdName,
         };
@@ -278,35 +293,39 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       },
     },
     {
-      title: (
-        <Tooltip title="Data completion tracking — coming soon">
-          <span style={{ color: '#bfbfbf' }}>Data Ready</span>
-        </Tooltip>
-      ),
-      key: 'dataReady',
-      width: 100,
-      render: () => (
-        <span style={{ color: '#d9d9d9', fontSize: 12 }}>
-          <CheckCircleOutlined style={{ marginRight: 4 }} />
-          —
-        </span>
-      ),
+      title: 'Report Status',
+      key: 'reportStatus',
+      width: 110,
+      filters: [
+        { text: 'Completed', value: 'Completed' },
+        { text: 'Pending', value: 'Pending' },
+        { text: 'Delayed', value: 'Delayed' },
+      ],
+      onFilter: (value, record) => {
+        const pct = record.investmentCount > 0 ? Math.round((record.completedCount / record.investmentCount) * 100) : 0;
+        const status = pct === 100 ? 'Completed' : pct > 0 ? 'Delayed' : 'Pending';
+        return status === value;
+      },
+      render: (_, record) => {
+        const pct = record.investmentCount > 0 ? Math.round((record.completedCount / record.investmentCount) * 100) : 0;
+        if (pct === 100) return <Tag color="success" style={{ fontSize: 11 }}><CheckCircleOutlined style={{ marginRight: 3 }} />Completed</Tag>;
+        if (pct > 0) return <Tag color="warning" style={{ fontSize: 11 }}><ClockCircleOutlined style={{ marginRight: 3 }} />Delayed</Tag>;
+        return <Tag style={{ fontSize: 11, color: '#8c8c8c' }}><ClockCircleOutlined style={{ marginRight: 3 }} />Pending</Tag>;
+      },
     },
     {
       title: '',
       key: 'action',
       width: 100,
-      render: () => (
-        <Tooltip title="Manual report triggering — coming soon">
-          <Button
-            size="small"
-            icon={<PlayCircleOutlined />}
-            disabled
-            style={{ fontSize: 11 }}
-          >
-            Run
-          </Button>
-        </Tooltip>
+      render: (_, record) => (
+        <Button
+          size="small"
+          icon={<EyeOutlined />}
+          onClick={() => setReviewConfig(record)}
+          style={{ fontSize: 11 }}
+        >
+          Review
+        </Button>
       ),
     },
   ];
@@ -376,6 +395,139 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
           locale={{ emptyText: 'No bulk-scheduled report configurations found' }}
         />
       </div>
+
+      {/* Review Modal */}
+      <Modal
+        title={reviewConfig ? `Review: ${reviewConfig.ReportConfigName}` : 'Review'}
+        open={!!reviewConfig}
+        onCancel={() => setReviewConfig(null)}
+        footer={<Button onClick={() => setReviewConfig(null)}>Close</Button>}
+        width={720}
+      >
+        {reviewConfig && (() => {
+          const planInvs = reviewConfig.planIds.length > 0
+            ? investments.filter(inv => reviewConfig.planIds.includes(inv.ct_PlanID))
+            : [];
+          const fcInProgress = reviewConfig.planFundChanges.filter(fc => fc.changeType === 'inProgress');
+          const fcExecuted = reviewConfig.planFundChanges.filter(fc => fc.changeType === 'executed');
+          const totalInv = planInvs.length;
+          const completedInv = planInvs.filter(inv => inv.quarterComplete).length;
+          const pct = totalInv > 0 ? Math.round((completedInv / totalInv) * 100) : 0;
+
+          return (
+            <div>
+              {/* Client + Config info */}
+              <div style={{ marginBottom: 12, fontSize: 13, color: '#595959' }}>
+                <strong>{reviewConfig.clientName}</strong>
+                {reviewConfig.isUsingSharedConfig && <Tag color="purple" style={{ fontSize: 10, marginLeft: 6 }}>Shared Config</Tag>}
+                <span style={{ margin: '0 8px', color: '#d9d9d9' }}>|</span>
+                Tier: <strong>{reviewConfig.tierName}</strong>
+                <span style={{ margin: '0 8px', color: '#d9d9d9' }}>|</span>
+                Last saved: {new Date(reviewConfig.LastSaved).toLocaleDateString()}
+              </div>
+
+              {/* Summary bar */}
+              <div style={{ background: '#edf6fb', border: '1px solid #5FB4E5', borderRadius: 6, padding: '10px 16px', marginBottom: 16, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                <span><TeamOutlined style={{ color: '#00437B', marginRight: 6 }} /><strong>{reviewConfig.planNames.length}</strong> plan{reviewConfig.planNames.length !== 1 ? 's' : ''}</span>
+                <span><FileTextOutlined style={{ color: '#3465CD', marginRight: 6 }} /><strong>{totalInv}</strong> investment{totalInv !== 1 ? 's' : ''}</span>
+                <span style={{ color: pct === 100 ? '#52c41a' : pct > 0 ? '#fa8c16' : '#8c8c8c' }}>
+                  <CheckCircleOutlined style={{ marginRight: 6 }} /><strong>{completedInv}/{totalInv}</strong> complete ({pct}%)
+                </span>
+                {(fcInProgress.length > 0 || fcExecuted.length > 0) && (
+                  <span><SwapOutlined style={{ color: '#fa8c16', marginRight: 6 }} /><strong>{fcInProgress.length + fcExecuted.length}</strong> fund change{fcInProgress.length + fcExecuted.length !== 1 ? 's' : ''}</span>
+                )}
+              </div>
+
+              {/* Per-plan breakdown */}
+              {reviewConfig.planNames.map((planName, idx) => {
+                const planId = reviewConfig.planIds[idx];
+                const planInvestments = investments.filter(inv => inv.ct_PlanID === planId);
+                const plan = allPlans.find(p => p.ct_PlanID === planId);
+                const planFc = reviewConfig.planFundChanges.filter(fc => fc.ct_PlanID === planId);
+
+                return (
+                  <div key={planId || idx} style={{ marginBottom: 12, border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden' }}>
+                    <div style={{ background: '#edf6fb', padding: '8px 12px', borderBottom: '1px solid #5FB4E5', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <strong>{planName}</strong>
+                      {plan?.type && <Tag style={{ fontSize: 10 }}>{plan.type}</Tag>}
+                    </div>
+
+                    {planInvestments.length > 0 ? (
+                      <div style={{ padding: '8px 12px' }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#00437B', marginBottom: 4 }}>
+                          Investments ({planInvestments.length})
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                          {planInvestments.slice(0, 30).map((inv, i) => (
+                            <Tag key={inv.ct_investmentid || i} color={inv.quarterComplete ? 'success' : undefined} style={{ fontSize: 11, margin: 0 }}>{inv.Ref}</Tag>
+                          ))}
+                          {planInvestments.length > 30 && (
+                            <Tag style={{ fontSize: 11, margin: 0, color: '#8c8c8c' }}>+{planInvestments.length - 30} more</Tag>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '8px 12px', fontSize: 12, color: '#8c8c8c' }}>No investments assigned</div>
+                    )}
+
+                    {planFc.length > 0 && (
+                      <div style={{ padding: '8px 12px', borderTop: '1px solid #f0f0f0' }}>
+                        {planFc.filter(fc => fc.changeType === 'inProgress').length > 0 && (
+                          <div style={{ marginBottom: 4 }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: '#fa8c16', marginBottom: 4 }}>Fund Changes — In Progress</div>
+                            {planFc.filter(fc => fc.changeType === 'inProgress').map((fc, i) => (
+                              <div key={fc.id || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
+                                <span style={{ color: '#ff4d4f' }}>{fc.currentInvestment || fc.currentFund}</span>
+                                <span style={{ color: '#8c8c8c' }}>&rarr;</span>
+                                <span style={{ color: '#52c41a' }}>{fc.replacementInvestment || fc.replacementFund}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {planFc.filter(fc => fc.changeType === 'executed').length > 0 && (
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: '#52c41a', marginBottom: 4 }}>Fund Changes — Past Year</div>
+                            {planFc.filter(fc => fc.changeType === 'executed').map((fc, i) => (
+                              <div key={fc.id || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
+                                <span style={{ color: '#ff4d4f' }}>{fc.currentInvestment || fc.currentFund}</span>
+                                <span style={{ color: '#8c8c8c' }}>&rarr;</span>
+                                <span style={{ color: '#52c41a' }}>{fc.replacementInvestment || fc.replacementFund}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Exhibit Pages */}
+              {reviewConfig.exhibitPages.length > 0 && (
+                <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden' }}>
+                  <div style={{ background: '#fafafa', padding: '8px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <UnorderedListOutlined style={{ color: '#3465CD' }} />
+                    <strong style={{ fontSize: 13 }}>Exhibits ({reviewConfig.exhibitPages.length})</strong>
+                    {reviewConfig.exhibitTemplateName && (
+                      <span style={{ fontSize: 11, color: '#8c8c8c', marginLeft: 'auto' }}>
+                        Template: {reviewConfig.exhibitTemplateName}
+                        {reviewConfig.isSharedTemplate && <Tag color="purple" style={{ fontSize: 10, marginLeft: 4 }}>Shared</Tag>}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ padding: '8px 12px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {reviewConfig.exhibitPages.map((page, i) => (
+                      <Tag key={page.id || i} color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
+                        {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                      </Tag>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </Modal>
     </div>
   );
 }
