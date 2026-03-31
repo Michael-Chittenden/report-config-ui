@@ -889,9 +889,37 @@ function App() {
                 </Tag>
               )}
             </Space>
-            <Button size="small" type="link" onClick={() => setLoadConfigOpen(true)}>
-              Switch
-            </Button>
+            <Space size="small">
+              {!activeConfigIsPrimary && activeConfigId && (
+                <Button
+                  size="small"
+                  type="link"
+                  icon={<StarFilled style={{ color: '#faad14' }} />}
+                  onClick={() => {
+                    const configTypeId = configType === 'single' ? 1 : configType === 'multi' ? 2 : configType === 'combo' ? 3 : 4;
+                    setAllConfigs(prev => prev.map(c => {
+                      // Set this config as Primary
+                      if (c.ReportConfigID === activeConfigId) return { ...c, Primary: true };
+                      // Clear Primary from other configs of same type for this client/plan
+                      if (c.Primary && c.ReportConfigType === configTypeId && c.AccountID === activeClient.accountId) {
+                        if (configTypeId === 1 && c.ct_PlanID !== selectedPlan) return c;
+                        return { ...c, Primary: false };
+                      }
+                      return c;
+                    }));
+                    setActiveConfigIsPrimary(true);
+                    setPrimaryConfigName(activeConfigName);
+                    message.success(`"${activeConfigName}" set as Primary`);
+                  }}
+                  style={{ fontSize: 12 }}
+                >
+                  Set as Primary
+                </Button>
+              )}
+              <Button size="small" type="link" onClick={() => setLoadConfigOpen(true)}>
+                Switch
+              </Button>
+            </Space>
           </div>
         )}
 
