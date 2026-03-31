@@ -565,8 +565,11 @@ function App() {
   // Auto-load primary config when a plan is selected (single plan)
   useEffect(() => {
     if (configType !== 'single' || !selectedPlan) return;
+    // Look for Primary: client-owned first, then any config assigned via planConfigMap that was set as Primary
     const primaryForPlan = allConfigs.find(
       c => c.Primary && c.ReportConfigType === 1 && c.ct_PlanID === selectedPlan && c.AccountID === activeClient.accountId
+    ) || allConfigs.find(
+      c => c.Primary && c.ReportConfigID === planConfigMap[selectedPlan]
     );
     if (primaryForPlan) {
       setActiveConfigId(primaryForPlan.ReportConfigID);
@@ -904,12 +907,23 @@ function App() {
                       // Set this config as Primary
                       if (c.ReportConfigID === activeConfigId) return { ...c, Primary: true };
                       // Clear Primary from other configs of same type for this client/plan
-                      if (c.Primary && c.ReportConfigType === configTypeId && c.AccountID === activeClient.accountId) {
-                        if (configTypeId === 1 && c.ct_PlanID !== selectedPlan) return c;
-                        return { ...c, Primary: false };
+                      if (c.Primary && c.ReportConfigType === configTypeId) {
+                        // For client configs, match by client
+                        if (c.AccountID === activeClient.accountId) {
+                          if (configTypeId === 1 && c.ct_PlanID !== selectedPlan) return c;
+                          return { ...c, Primary: false };
+                        }
+                        // For shared configs previously set as primary via planConfigMap
+                        if (configTypeId === 1 && planConfigMap[selectedPlan] === c.ReportConfigID) {
+                          return { ...c, Primary: false };
+                        }
                       }
                       return c;
                     }));
+                    // Also persist the plan-to-config assignment
+                    if (configType === 'single' && selectedPlan) {
+                      assignConfigToPlan(selectedPlan, activeConfigId);
+                    }
                     setActiveConfigIsPrimary(true);
                     setPrimaryConfigName(activeConfigName);
                     message.success(`"${activeConfigName}" set as Primary`);
