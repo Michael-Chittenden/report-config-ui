@@ -505,8 +505,11 @@ function App() {
     }
 
     setActiveConfigName(name);
-    setActiveConfigIsPrimary(primary || false);
-    if (primary) {
+    // Preserve Primary if already set (e.g. via "Set as Primary" button) — only override if explicitly setting primary
+    const existingConfig = allConfigs.find(c => c.ReportConfigID === activeConfigId);
+    const isPrimary = primary || (isUpdate && existingConfig?.Primary) || false;
+    setActiveConfigIsPrimary(isPrimary);
+    if (isPrimary) {
       setPrimaryConfigName(name);
     }
   };
