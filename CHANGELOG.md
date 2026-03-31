@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] — 2026-03-31
+
+### Combo Restore, Dashboard Enhancements, UX Polish
+
+**Combo Config Persistence**
+- Combo configs now save and restore child config selections, exhibit template, and combo options
+- _selectedConfigIDs, _aggregateFactSheets, _replaceSpotlights persisted on config records
+- "Primary only" filter on combo available configs list
+
+**Bulk Dashboard**
+- Combo configs show child config names and resolved plans
+- "Report Status" column replaces "Data Ready" (Completed/Delayed/Pending based on investment completion)
+- "Review" button opens full config preview with plans, investments, fund changes, and exhibit pages
+- Ad hoc runs excluded from dashboard
+- Exhibit template column with shared tag
+
+**Exhibit Visibility**
+- Child config exhibit pages shown in combo config section and Run Now modal
+- Exhibit pages added to ad hoc Run Now dialog for all config types
+- Fixed exhibit resolution for user-saved templates (_sessionIds fallback)
+
+**Demo Data Admin**
+- "Q Complete" checkbox per investment for quarter completion tracking
+- Pagesets tab showing all exhibits grouped by category
+- Export/Import now includes report configs, exhibit templates, and plan groups
+
+**Other**
+- COMBO Title Page added to COMBO (Client) pageset category
+- Section group labels: Data Checks, Included Investments, Content, Scheduling
+- "Fund changes executed since last quarter" renamed to "executed in the past year"
+- Asset Class | Managers section deactivated (commented for future use)
+
+---
+
 ## [1.3.0] — 2026-03-31
 
 ### Bulk Dashboard & Data Tracking
