@@ -39,6 +39,7 @@ export default function MultiPlanConfig({
   allCandidates = [],
   isTemplateAdmin = false,
   allPlans = [],
+  exhibitImages = {},
 }) {
   const lastToastedConfigRef = useRef(null);
   const [selectedPlans, setSelectedPlans] = useState([]);
@@ -511,6 +512,7 @@ export default function MultiPlanConfig({
           includeIndividualSummaries={includeIndividualSummaries}
           setIncludeIndividualSummaries={setIncludeIndividualSummaries}
           isTemplateAdmin={isTemplateAdmin}
+          exhibitImages={exhibitImages}
         />
       </div>
 

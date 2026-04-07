@@ -114,6 +114,18 @@ function App() {
     try { localStorage.setItem(TEMPLATE_ADMIN_KEY, String(isTemplateAdmin)); } catch (e) {}
   }, [isTemplateAdmin]);
 
+  // Exhibit screenshot images (keyed by pageset ID → base64 data URL)
+  const EXHIBIT_IMAGES_KEY = 'irp-exhibit-images-v1';
+  const [exhibitImages, setExhibitImages] = useState(() => {
+    try {
+      const stored = localStorage.getItem(EXHIBIT_IMAGES_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch (e) { return {}; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(EXHIBIT_IMAGES_KEY, JSON.stringify(exhibitImages)); } catch (e) {}
+  }, [exhibitImages]);
+
   // Client switcher (demo only — in production this comes from CRM context)
   const [selectedClientId, setSelectedClientId] = useState(() => allClients[0]?.accountId);
   const activeClient = useMemo(() => allClients.find(c => c.accountId === selectedClientId) || allClients[0], [selectedClientId, allClients]);
@@ -1048,6 +1060,7 @@ function App() {
                 return false;
               });
             })()}
+            exhibitImages={exhibitImages}
           />
         )}
 
@@ -1079,6 +1092,7 @@ function App() {
             allCandidates={candidates}
             isTemplateAdmin={isTemplateAdmin}
             allPlans={allPlans}
+            exhibitImages={exhibitImages}
           />
         )}
 
@@ -1103,6 +1117,7 @@ function App() {
             onRenameTemplate={handleRenameTemplate}
             onDeleteTemplate={handleDeleteTemplate}
             isTemplateAdmin={isTemplateAdmin}
+            exhibitImages={exhibitImages}
           />
         )}
 
@@ -1163,6 +1178,8 @@ function App() {
         setAllFundChanges={setAllFundChanges}
         isTemplateAdmin={isTemplateAdmin}
         setIsTemplateAdmin={setIsTemplateAdmin}
+        exhibitImages={exhibitImages}
+        setExhibitImages={setExhibitImages}
       />
     </ConfigProvider>
   );

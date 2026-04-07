@@ -32,6 +32,7 @@ export default function ComboConfig({
   onRenameTemplate,
   onDeleteTemplate,
   isTemplateAdmin = false,
+  exhibitImages = {},
 }) {
   // Eligible child configs: single (1) or multi (2) plans, for this client only
   const comboEligibleConfigs = useMemo(() =>
@@ -425,6 +426,7 @@ export default function ComboConfig({
         onDeleteTemplate={onDeleteTemplate}
         clientAccountId={clientAccountId}
         isTemplateAdmin={isTemplateAdmin}
+        exhibitImages={exhibitImages}
       />
       <BulkRunSection
         includeInBulk={includeInBulk}

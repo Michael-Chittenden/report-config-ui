@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Drawer, Tabs, Table, Button, Input, Select, Space, Tag, Popconfirm, Divider, Switch, Checkbox, message } from 'antd';
-import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined, LockOutlined, UnlockOutlined, HistoryOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { Drawer, Tabs, Table, Button, Input, Select, Space, Tag, Popconfirm, Divider, Switch, Checkbox, Popover, message } from 'antd';
+import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined, LockOutlined, UnlockOutlined, HistoryOutlined, UnorderedListOutlined, PictureOutlined } from '@ant-design/icons';
 import { pagesets as seedPagesets, pagesetCategories } from '../data/mockData';
 import changelogRaw from '../../CHANGELOG.md?raw';
 
@@ -44,6 +44,8 @@ export default function MockDataAdmin({
   setAllFundChanges,
   isTemplateAdmin = false,
   setIsTemplateAdmin,
+  exhibitImages = {},
+  setExhibitImages,
 }) {
   // --- Inline edit state ---
   const [editingClientId, setEditingClientId] = useState(null);
@@ -924,11 +926,78 @@ export default function MockDataAdmin({
                   <Tag style={{ marginLeft: 8, fontSize: 10 }}>{cat.items.length}</Tag>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {cat.items.map(page => (
-                    <Tag key={page.id} color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
-                      {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
-                    </Tag>
-                  ))}
+                  {cat.items.map(page => {
+                    const hasImage = !!exhibitImages[page.id];
+                    return (
+                      <Popover
+                        key={page.id}
+                        trigger="click"
+                        content={
+                          <div style={{ width: 320 }}>
+                            {hasImage ? (
+                              <div>
+                                <img src={exhibitImages[page.id]} alt={page.name} style={{ width: '100%', borderRadius: 4, marginBottom: 8 }} />
+                                <Button
+                                  size="small"
+                                  danger
+                                  onClick={() => {
+                                    if (setExhibitImages) {
+                                      setExhibitImages(prev => {
+                                        const next = { ...prev };
+                                        delete next[page.id];
+                                        return next;
+                                      });
+                                    }
+                                  }}
+                                  style={{ width: '100%' }}
+                                >
+                                  Remove Image
+                                </Button>
+                              </div>
+                            ) : (
+                              <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                                <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 8 }}>No screenshot uploaded</div>
+                              </div>
+                            )}
+                            <Button
+                              size="small"
+                              icon={<UploadOutlined />}
+                              style={{ width: '100%', marginTop: hasImage ? 4 : 0 }}
+                              onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = '.png,.jpg,.jpeg,.gif,.webp';
+                                input.onchange = (e) => {
+                                  const file = e.target.files[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = (evt) => {
+                                    if (setExhibitImages) {
+                                      setExhibitImages(prev => ({ ...prev, [page.id]: evt.target.result }));
+                                      message.success(`Screenshot uploaded for "${page.name}"`);
+                                    }
+                                  };
+                                  reader.readAsDataURL(file);
+                                };
+                                input.click();
+                              }}
+                            >
+                              {hasImage ? 'Replace Image' : 'Upload Screenshot'}
+                            </Button>
+                          </div>
+                        }
+                        title={page.name}
+                      >
+                        <Tag
+                          color={page.isTab ? 'blue' : undefined}
+                          style={{ fontSize: 11, margin: 0, cursor: 'pointer', border: hasImage ? '2px solid #52c41a' : undefined }}
+                        >
+                          {hasImage && <PictureOutlined style={{ marginRight: 3, color: '#52c41a' }} />}
+                          {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                        </Tag>
+                      </Popover>
+                    );
+                  })}
                   {cat.items.length === 0 && (
                     <span style={{ fontSize: 12, color: '#8c8c8c' }}>No pagesets in this category</span>
                   )}
@@ -1043,6 +1112,7 @@ export default function MockDataAdmin({
               templates: allTemplates,
               planGroups: allPlanGroups,
               fundChanges: allFundChanges,
+              exhibitImages,
               _exportedAt: new Date().toISOString(),
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1079,6 +1149,7 @@ export default function MockDataAdmin({
                   if (data.templates && setAllTemplates) setAllTemplates(data.templates);
                   if (data.planGroups && setAllPlanGroups) setAllPlanGroups(data.planGroups);
                   if (data.fundChanges && setAllFundChanges) setAllFundChanges(data.fundChanges);
+                  if (data.exhibitImages && setExhibitImages) setExhibitImages(data.exhibitImages);
                   message.success('Demo data imported successfully');
                 } catch (err) {
                   message.error('Failed to import: invalid JSON file');

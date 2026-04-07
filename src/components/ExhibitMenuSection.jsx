@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Select, Button, Modal, Table, Tag, Divider, Space, Input, Popconfirm, Checkbox, Alert, message } from 'antd';
-import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined, LockOutlined } from '@ant-design/icons';
+import { Select, Button, Modal, Table, Tag, Divider, Space, Input, Popconfirm, Checkbox, Alert, Popover, message } from 'antd';
+import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined, LockOutlined, PictureOutlined } from '@ant-design/icons';
 import { pagesets, pagesetCategories, exhibitMenuTypes, exhibitTemplateConfigs as seedTemplates } from '../data/mockData';
 import { resolveExhibitPageSetIds, resolveExhibitIds } from '../data/dataResolvers';
 import DualListBox from './DualListBox';
@@ -40,6 +40,7 @@ export default function ExhibitMenuSection({
   setIncludeIndividualSummaries,
   // Permission: can this user modify shared templates?
   isTemplateAdmin = false,
+  exhibitImages = {},
 }) {
   const [expanded, setExpanded] = useState(false);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
@@ -532,6 +533,28 @@ export default function ExhibitMenuSection({
             onSelectedChange={handleDualListChange}
             selectedTitle="Selected Exhibits"
             availableTitle="Available Exhibits"
+            renderItem={(item) => {
+              const hasImage = exhibitImages && exhibitImages[item.id];
+              const label = (
+                <span>
+                  {hasImage && <PictureOutlined style={{ marginRight: 4, color: '#52c41a', fontSize: 11 }} />}
+                  {item.name}
+                </span>
+              );
+              if (!hasImage) return label;
+              return (
+                <Popover
+                  trigger="hover"
+                  placement="right"
+                  content={
+                    <img src={exhibitImages[item.id]} alt={item.name} style={{ width: 400, borderRadius: 4 }} />
+                  }
+                  title={item.name}
+                >
+                  {label}
+                </Popover>
+              );
+            }}
           />
 
           <div className="section-actions" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
