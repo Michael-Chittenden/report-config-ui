@@ -126,6 +126,18 @@ function App() {
     try { localStorage.setItem(EXHIBIT_IMAGES_KEY, JSON.stringify(exhibitImages)); } catch (e) {}
   }, [exhibitImages]);
 
+  // Exhibit header text options (keyed by pageset ID → array of header strings, index 0 = "Default")
+  const EXHIBIT_HEADERS_KEY = 'irp-exhibit-headers-v1';
+  const [exhibitHeaders, setExhibitHeaders] = useState(() => {
+    try {
+      const stored = localStorage.getItem(EXHIBIT_HEADERS_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch (e) { return {}; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(EXHIBIT_HEADERS_KEY, JSON.stringify(exhibitHeaders)); } catch (e) {}
+  }, [exhibitHeaders]);
+
   // Client switcher (demo only — in production this comes from CRM context)
   const [selectedClientId, setSelectedClientId] = useState(() => allClients[0]?.accountId);
   const activeClient = useMemo(() => allClients.find(c => c.accountId === selectedClientId) || allClients[0], [selectedClientId, allClients]);
@@ -1180,6 +1192,8 @@ function App() {
         setIsTemplateAdmin={setIsTemplateAdmin}
         exhibitImages={exhibitImages}
         setExhibitImages={setExhibitImages}
+        exhibitHeaders={exhibitHeaders}
+        setExhibitHeaders={setExhibitHeaders}
       />
     </ConfigProvider>
   );

@@ -46,6 +46,8 @@ export default function MockDataAdmin({
   setIsTemplateAdmin,
   exhibitImages = {},
   setExhibitImages,
+  exhibitHeaders = {},
+  setExhibitHeaders,
 }) {
   // --- Inline edit state ---
   const [editingClientId, setEditingClientId] = useState(null);
@@ -928,12 +930,15 @@ export default function MockDataAdmin({
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                   {cat.items.map(page => {
                     const hasImage = !!exhibitImages[page.id];
+                    const headers = exhibitHeaders[page.id] || ['Default'];
+                    const hasCustomHeaders = headers.length > 1 || (headers.length === 1 && headers[0] !== 'Default');
                     return (
                       <Popover
                         key={page.id}
                         trigger="click"
                         content={
-                          <div style={{ width: 320 }}>
+                          <div style={{ width: 340 }}>
+                            {/* Screenshot section */}
                             {hasImage ? (
                               <div>
                                 <img src={exhibitImages[page.id]} alt={page.name} style={{ width: '100%', borderRadius: 4, marginBottom: 8 }} />
@@ -955,8 +960,8 @@ export default function MockDataAdmin({
                                 </Button>
                               </div>
                             ) : (
-                              <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                                <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 8 }}>No screenshot uploaded</div>
+                              <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                                <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 4 }}>No screenshot uploaded</div>
                               </div>
                             )}
                             <Button
@@ -984,16 +989,68 @@ export default function MockDataAdmin({
                             >
                               {hasImage ? 'Replace Image' : 'Upload Screenshot'}
                             </Button>
+
+                            {/* Header text options */}
+                            <Divider style={{ margin: '10px 0 8px' }} />
+                            <div style={{ fontSize: 12, fontWeight: 600, color: '#00437B', marginBottom: 6 }}>Header Text Options</div>
+                            {headers.map((h, idx) => (
+                              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                                <Input
+                                  size="small"
+                                  value={h}
+                                  style={{ flex: 1, fontSize: 12 }}
+                                  onChange={(e) => {
+                                    if (setExhibitHeaders) {
+                                      const updated = [...headers];
+                                      updated[idx] = e.target.value;
+                                      setExhibitHeaders(prev => ({ ...prev, [page.id]: updated }));
+                                    }
+                                  }}
+                                />
+                                {headers.length > 1 && (
+                                  <Button
+                                    type="text"
+                                    size="small"
+                                    danger
+                                    icon={<DeleteOutlined style={{ fontSize: 11 }} />}
+                                    onClick={() => {
+                                      if (setExhibitHeaders) {
+                                        const updated = headers.filter((_, i) => i !== idx);
+                                        setExhibitHeaders(prev => ({ ...prev, [page.id]: updated }));
+                                      }
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            ))}
+                            <Button
+                              size="small"
+                              type="dashed"
+                              icon={<PlusOutlined />}
+                              style={{ width: '100%', marginTop: 4, fontSize: 11 }}
+                              onClick={() => {
+                                if (setExhibitHeaders) {
+                                  setExhibitHeaders(prev => ({
+                                    ...prev,
+                                    [page.id]: [...(prev[page.id] || ['Default']), ''],
+                                  }));
+                                }
+                              }}
+                            >
+                              Add Header Option
+                            </Button>
                           </div>
                         }
                         title={page.name}
                       >
                         <Tag
                           color={page.isTab ? 'blue' : undefined}
-                          style={{ fontSize: 11, margin: 0, cursor: 'pointer', border: hasImage ? '2px solid #52c41a' : undefined }}
+                          style={{ fontSize: 11, margin: 0, cursor: 'pointer', border: hasImage ? '2px solid #52c41a' : hasCustomHeaders ? '2px solid #3465CD' : undefined }}
                         >
                           {hasImage && <PictureOutlined style={{ marginRight: 3, color: '#52c41a' }} />}
+                          {hasCustomHeaders && !hasImage && <EditOutlined style={{ marginRight: 3, color: '#3465CD', fontSize: 10 }} />}
                           {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                          {headers.length > 1 && <span style={{ marginLeft: 3, fontSize: 9, color: '#3465CD' }}>({headers.length})</span>}
                         </Tag>
                       </Popover>
                     );
@@ -1113,6 +1170,7 @@ export default function MockDataAdmin({
               planGroups: allPlanGroups,
               fundChanges: allFundChanges,
               exhibitImages,
+              exhibitHeaders,
               _exportedAt: new Date().toISOString(),
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1150,6 +1208,7 @@ export default function MockDataAdmin({
                   if (data.planGroups && setAllPlanGroups) setAllPlanGroups(data.planGroups);
                   if (data.fundChanges && setAllFundChanges) setAllFundChanges(data.fundChanges);
                   if (data.exhibitImages && setExhibitImages) setExhibitImages(data.exhibitImages);
+                  if (data.exhibitHeaders && setExhibitHeaders) setExhibitHeaders(data.exhibitHeaders);
                   message.success('Demo data imported successfully');
                 } catch (err) {
                   message.error('Failed to import: invalid JSON file');
