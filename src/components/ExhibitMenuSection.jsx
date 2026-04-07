@@ -68,7 +68,8 @@ export default function ExhibitMenuSection({
   const availableExhibits = useMemo(() => {
     return pagesets
       .filter(p => p.categoryId === categoryId)
-      .filter(p => !selectedExhibitIds.includes(p.id));
+      .filter(p => !selectedExhibitIds.includes(p.id))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [categoryId, selectedExhibitIds]);
 
   const isSinglePlanOnlyCategory = (catId) => configType !== 'single' && singlePlanOnlyCategoryIds.has(catId);

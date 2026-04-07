@@ -44,11 +44,11 @@ export const bulkPctThresholds = [
 // --- PageSetCategories (Category 8 PL retired) ---
 export const pagesetCategories = [
   { id: 1, name: 'Core Shared Pages (Client Level)' },
-  { id: 2, name: 'Single Plan Only' },
-  { id: 3, name: 'Multi Plan Only' },
+  { id: 2, name: 'Single Plan' },
+  { id: 3, name: 'Multi Plan' },
   { id: 4, name: 'COMBO (Client) \u2011 Specific Pages' },
   { id: 5, name: 'Optional / Add\u2011On Pages' },
-  { id: 6, name: 'Single Plan with Liabilities Only' },
+  { id: 6, name: 'Single Plan with Liabilities' },
   { id: 7, name: 'IM PARIs Reports' },
 ];
 
@@ -484,7 +484,6 @@ export const pagesets = [
   // Category 6: Single Plan with Liabilities Only
   { id: 'ps-90', name: 'NQ Asset/Liability Summary Page', categoryId: 6, isTab: false },
   { id: 'ps-91', name: 'NQ Liability Investment Policy Monitor', categoryId: 6, isTab: false },
-  { id: 'ps-93', name: 'NQ Asset Performance Summary', categoryId: 6, isTab: false },
   { id: 'ps-94', name: 'NQ Historical Liability Valuation Summary', categoryId: 6, isTab: false },
   { id: 'ps-95', name: 'TAB - NQ Plan Financing Review', categoryId: 6, isTab: true },
   { id: 'ps-96', name: 'TAB - NQ Benefit Liability Investment Review', categoryId: 6, isTab: true },
@@ -493,20 +492,25 @@ export const pagesets = [
   { id: 'ps-99', name: 'NQ Liability Investment Select Commentary', categoryId: 6, isTab: false },
   { id: 'ps-100', name: 'NQ Liability Valuation Summary', categoryId: 6, isTab: false },
   { id: 'ps-101', name: 'NQ Liability Plan Menu', categoryId: 6, isTab: false },
+  { id: 'ps-215', name: 'NQ Mirror Asset Liability Scores', categoryId: 6, isTab: false },
+  { id: 'ps-216', name: 'NQ Mirror Liability Discussion Items', categoryId: 6, isTab: false },
+  { id: 'ps-217', name: 'NQ Mirror Asset Liability ScoresTargetDateSeries', categoryId: 6, isTab: false },
+  { id: 'ps-218', name: 'NQ Mirror Asset Liability Plan Menu', categoryId: 6, isTab: false },
+  { id: 'ps-219', name: 'NQ Mirror Asset Liability Performance Summary', categoryId: 6, isTab: false },
 
-  // DB pages (moved to Core Shared)
-  { id: 'ps-110', name: 'DB Investment Policy Summary', categoryId: 1, isTab: false },
+  // DB pages (Core Shared)
   { id: 'ps-111', name: 'DB Summary and Recommendations', categoryId: 1, isTab: false },
   { id: 'ps-112', name: 'DB Evaluation Methodology', categoryId: 1, isTab: false },
-  { id: 'ps-113', name: 'DB Performance Book', categoryId: 1, isTab: false },
 
   // Category 7: IM PARIs Reports
-  { id: 'ps-120', name: 'PARIs Performance Book — DC', categoryId: 7, isTab: false },
-  { id: 'ps-121', name: 'PARIs Performance Book — NQ', categoryId: 7, isTab: false },
-  { id: 'ps-122', name: 'PARIs Performance Book — DB', categoryId: 7, isTab: false },
-  { id: 'ps-123', name: 'PARIs Investment Policy — DC', categoryId: 7, isTab: false },
-  { id: 'ps-124', name: 'PARIs Investment Policy — NQ', categoryId: 7, isTab: false },
-  { id: 'ps-125', name: 'PARIs Investment Policy — DB', categoryId: 7, isTab: false },
+  { id: 'ps-110', name: 'PARis Investment Policy - Plan 1', categoryId: 7, isTab: false },
+  { id: 'ps-113', name: 'PARis Performance Book - Plan 1', categoryId: 7, isTab: false },
+  { id: 'ps-120', name: 'PARis Performance Book - Plan 2', categoryId: 7, isTab: false },
+  { id: 'ps-121', name: 'PARis Performance Book - Plan 3', categoryId: 7, isTab: false },
+  { id: 'ps-122', name: 'PARis Performance Book - Plan 4', categoryId: 7, isTab: false },
+  { id: 'ps-123', name: 'PARis Investment Policy - Plan 2', categoryId: 7, isTab: false },
+  { id: 'ps-124', name: 'PARis Investment Policy - Plan 3', categoryId: 7, isTab: false },
+  { id: 'ps-125', name: 'PARis Investment Policy - Plan 4', categoryId: 7, isTab: false },
 ];
 
 // ===================== EXHIBIT TEMPLATE CONFIG =====================
