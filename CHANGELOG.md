@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] — 2026-04-07
+
+### IM PARis Reports, Header Selection, Exhibit Screenshots
+
+**Report Type & Category Changes**
+- Multi Plan tab renamed to "Plan Groups"
+- Category renames: "Single Plan Only" → "Single Plan", "Multi Plan Only" → "Multi Plan", "Single Plan with Liabilities Only" → "Single Plan with Liabilities"
+- Category 7 renamed to "IM PARis Reports" — enabled for Single Plan and Plan Groups
+- DB Performance Book and DB Investment Policy moved to IM PARis Reports
+- 6 new PARis pagesets: Performance Book + Investment Policy for Plans 1-4
+- 5 new NQ Mirror pagesets added to Single Plan with Liabilities (ps-215 to ps-219)
+- Available exhibits sorted alphabetically
+
+**Exhibit Screenshot Previews**
+- Upload representative screenshots per pageset via Demo Data > Pagesets tab
+- Green border + camera icon on pagesets with uploaded images
+- Hover over available exhibits to see screenshot popover (400px)
+- Export/Import includes screenshot data
+
+**Exhibit Header Text Options**
+- Configure multiple header text options per pageset in admin
+- Selected exhibits show default header on hover
+- Info icon on selected exhibits with multiple header options — click to choose
+- Header selection modal with radio-style picker
+
+**Schema: PageSetOption Table**
+- New table: PageSetOption (PageSetOptionID, PageSetID, HeaderText)
+- ExhibitTemplatePageSet gains PageSetOptionID column (nullable FK)
+- NULL = default header, non-null = selected header text variant
+- Updated IRP-Database-Schema.docx
+
+**Set as Primary**
+- "Set as Primary" button on active config banner (works for both client and shared configs)
+- Save preserves Primary flag set via banner button
+
+---
+
 ## [1.4.0] — 2026-03-31
 
 ### Combo Restore, Dashboard Enhancements, UX Polish
