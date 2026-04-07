@@ -49,7 +49,7 @@ export const pagesetCategories = [
   { id: 4, name: 'COMBO (Client) \u2011 Specific Pages' },
   { id: 5, name: 'Optional / Add\u2011On Pages' },
   { id: 6, name: 'Single Plan with Liabilities Only' },
-  { id: 7, name: 'Single Plan with DB Only' },
+  { id: 7, name: 'IM PARIs Reports' },
 ];
 
 // ===================== CLIENTS & PLANS =====================
@@ -494,11 +494,19 @@ export const pagesets = [
   { id: 'ps-100', name: 'NQ Liability Valuation Summary', categoryId: 6, isTab: false },
   { id: 'ps-101', name: 'NQ Liability Plan Menu', categoryId: 6, isTab: false },
 
-  // Category 7: Single Plan with DB Only
-  { id: 'ps-110', name: 'DB Investment Policy Summary', categoryId: 7, isTab: false },
-  { id: 'ps-111', name: 'DB Summary and Recommendations', categoryId: 7, isTab: false },
-  { id: 'ps-112', name: 'DB Evaluation Methodology', categoryId: 7, isTab: false },
-  { id: 'ps-113', name: 'DB Performance Book', categoryId: 7, isTab: false },
+  // DB pages (moved to Core Shared)
+  { id: 'ps-110', name: 'DB Investment Policy Summary', categoryId: 1, isTab: false },
+  { id: 'ps-111', name: 'DB Summary and Recommendations', categoryId: 1, isTab: false },
+  { id: 'ps-112', name: 'DB Evaluation Methodology', categoryId: 1, isTab: false },
+  { id: 'ps-113', name: 'DB Performance Book', categoryId: 1, isTab: false },
+
+  // Category 7: IM PARIs Reports
+  { id: 'ps-120', name: 'PARIs Performance Book — DC', categoryId: 7, isTab: false },
+  { id: 'ps-121', name: 'PARIs Performance Book — NQ', categoryId: 7, isTab: false },
+  { id: 'ps-122', name: 'PARIs Performance Book — DB', categoryId: 7, isTab: false },
+  { id: 'ps-123', name: 'PARIs Investment Policy — DC', categoryId: 7, isTab: false },
+  { id: 'ps-124', name: 'PARIs Investment Policy — NQ', categoryId: 7, isTab: false },
+  { id: 'ps-125', name: 'PARIs Investment Policy — DB', categoryId: 7, isTab: false },
 ];
 
 // ===================== EXHIBIT TEMPLATE CONFIG =====================
@@ -524,10 +532,12 @@ export const exhibitTemplateConfigs = [
 
 // ===================== EXHIBIT TEMPLATE (JUNCTION) =====================
 // Links ExhibitTemplateID → PageSetID with ordering
+// PageSetOptionID references the PageSetOption table (header text selection)
+// null = use default header
 
 export const exhibitTemplatePageSets = [
   // ExhibitTemplateID 77777: Demo Client DC Plan
-  { ExhibitTemplateID: 77777, PageSetID: 'ps-1', Order: 1 },
+  { ExhibitTemplateID: 77777, PageSetID: 'ps-1', Order: 1, PageSetOptionID: null },
   { ExhibitTemplateID: 77777, PageSetID: 'ps-2', Order: 2 },
   { ExhibitTemplateID: 77777, PageSetID: 'ps-18', Order: 3 },
   { ExhibitTemplateID: 77777, PageSetID: 'ps-13', Order: 4 },

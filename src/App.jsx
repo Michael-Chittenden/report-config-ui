@@ -1073,6 +1073,7 @@ function App() {
               });
             })()}
             exhibitImages={exhibitImages}
+            exhibitHeaders={exhibitHeaders}
           />
         )}
 
@@ -1105,6 +1106,7 @@ function App() {
             isTemplateAdmin={isTemplateAdmin}
             allPlans={allPlans}
             exhibitImages={exhibitImages}
+            exhibitHeaders={exhibitHeaders}
           />
         )}
 
@@ -1130,6 +1132,7 @@ function App() {
             onDeleteTemplate={handleDeleteTemplate}
             isTemplateAdmin={isTemplateAdmin}
             exhibitImages={exhibitImages}
+            exhibitHeaders={exhibitHeaders}
           />
         )}
 

@@ -15,7 +15,7 @@ const emptyManagerGroups = [
   { id: 'group-default-3', name: 'Group 3', customName: 'Core Equity', managers: [] },
 ];
 
-export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveConfig, currentPrimaryName, activeConfigName, activeConfigId, savedConfigRecord, allTemplates, allConfigs, onSaveTemplate, onUpdateTemplate, onRenameTemplate, onDeleteTemplate, clientAccountId, planFundChanges, planInvestments = [], allCandidates = [], isTemplateAdmin = false, allPlans = [], otherPlansUsingConfig = [], exhibitImages = {} }) {
+export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveConfig, currentPrimaryName, activeConfigName, activeConfigId, savedConfigRecord, allTemplates, allConfigs, onSaveTemplate, onUpdateTemplate, onRenameTemplate, onDeleteTemplate, clientAccountId, planFundChanges, planInvestments = [], allCandidates = [], isTemplateAdmin = false, allPlans = [], otherPlansUsingConfig = [], exhibitImages = {}, exhibitHeaders = {} }) {
   // --- All config state lives here ---
   const lastToastedConfigRef = useRef(null);
   const [qdiaOptOut, setQdiaOptOut] = useState(false);
@@ -190,6 +190,7 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
         clientAccountId={clientAccountId}
         isTemplateAdmin={isTemplateAdmin}
         exhibitImages={exhibitImages}
+        exhibitHeaders={exhibitHeaders}
       />
       </div>
 

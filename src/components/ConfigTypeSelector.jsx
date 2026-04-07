@@ -20,7 +20,7 @@ export default function ConfigTypeSelector({ value, onChange }) {
           value: 'multi',
           label: (
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 8px' }}>
-              <CopyOutlined /> Multi Plan
+              <CopyOutlined /> Plan Groups
             </span>
           ),
         },

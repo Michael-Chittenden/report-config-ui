@@ -18,6 +18,7 @@ export default function DualListBox({
   selectedTitle = 'Selected',
   availableTitle = 'Available',
   renderItem,
+  renderSelectedItem,
 }) {
   const [selectedHighlight, setSelectedHighlight] = useState([]);
   const [availableHighlight, setAvailableHighlight] = useState([]);
@@ -130,7 +131,7 @@ export default function DualListBox({
               onClick={() => toggleHighlight(getId(item), selectedHighlight, setSelectedHighlight)}
             >
               <HolderOutlined className="drag-handle" style={{ color: '#d9d9d9', fontSize: 11 }} />
-              <span>{renderItem ? renderItem(item) : getName(item)}</span>
+              <span>{(renderSelectedItem || renderItem) ? (renderSelectedItem || renderItem)(item) : getName(item)}</span>
             </div>
           ))}
         </div>

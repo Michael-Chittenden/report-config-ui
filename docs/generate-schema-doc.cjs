@@ -169,10 +169,16 @@ const exhibitTables = {
     ["LastSavedBy", "NVARCHAR(100)", "User who last saved"],
     ["LastSaved", "DATETIME2", "Last save timestamp"],
   ],
+  "PageSetOption": [
+    ["PageSetOptionID", "INT IDENTITY (PK)", "Auto-incrementing ID"],
+    ["PageSetID", "INT (FK)", "References PageSet"],
+    ["HeaderText", "NVARCHAR(200)", "Custom header text for this pageset variant"],
+  ],
   "ExhibitTemplatePageSet": [
     ["ExhibitTemplateID", "INT (FK, PK)", "References ExhibitTemplate"],
     ["PageSetID", "INT (FK, PK)", "References PageSet"],
     ["SortOrder", "INT", "Display order of exhibit in template"],
+    ["PageSetOptionID", "INT NULL (FK)", "References PageSetOption \u2014 selected header text variant (NULL = default)"],
   ],
 };
 
@@ -357,12 +363,22 @@ CREATE TABLE ExhibitTemplate (
     LastSaved DATETIME2 NOT NULL DEFAULT GETUTCDATE()
 );
 
+CREATE TABLE PageSetOption (
+    PageSetOptionID INT IDENTITY PRIMARY KEY,
+    PageSetID INT NOT NULL
+        REFERENCES PageSet(PageSetID),
+    HeaderText NVARCHAR(200) NOT NULL
+);
+
 CREATE TABLE ExhibitTemplatePageSet (
     ExhibitTemplateID INT NOT NULL
         REFERENCES ExhibitTemplate(ExhibitTemplateID),
     PageSetID INT NOT NULL
         REFERENCES PageSet(PageSetID),
     SortOrder INT NOT NULL DEFAULT 0,
+    PageSetOptionID INT NULL
+        REFERENCES PageSetOption(PageSetOptionID),
+    -- NULL = use default header; non-null = custom header text selection
     PRIMARY KEY (ExhibitTemplateID, PageSetID)
 );
 

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Select, Button, Modal, Table, Tag, Divider, Space, Input, Popconfirm, Checkbox, Alert, Popover, message } from 'antd';
-import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined, LockOutlined, PictureOutlined } from '@ant-design/icons';
+import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined, LockOutlined, PictureOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { pagesets, pagesetCategories, exhibitMenuTypes, exhibitTemplateConfigs as seedTemplates } from '../data/mockData';
 import { resolveExhibitPageSetIds, resolveExhibitIds } from '../data/dataResolvers';
 import DualListBox from './DualListBox';
@@ -13,9 +13,11 @@ const formatDate = (dateStr) => {
 };
 
 // Categories that are only available for single plan configs
-const singlePlanOnlyCategoryIds = new Set([2, 6, 7]);
+const singlePlanOnlyCategoryIds = new Set([2, 6]);
 // Categories that are only available for multi plan configs (not combo)
 const multiPlanOnlyCategoryIds = new Set([3]);
+// Categories available for single plan AND plan groups (multi), but not combo
+const singleAndMultiOnlyCategoryIds = new Set([7]);
 
 export default function ExhibitMenuSection({
   configType = 'single',
@@ -41,8 +43,11 @@ export default function ExhibitMenuSection({
   // Permission: can this user modify shared templates?
   isTemplateAdmin = false,
   exhibitImages = {},
+  exhibitHeaders = {},
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [headerModalPageset, setHeaderModalPageset] = useState(null); // pageset object for header selection modal
+  const [selectedHeaderMap, setSelectedHeaderMap] = useState({}); // { pagesetId: headerIndex }
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState('');
   const [saveAsShared, setSaveAsShared] = useState(false);
@@ -68,15 +73,18 @@ export default function ExhibitMenuSection({
 
   const isSinglePlanOnlyCategory = (catId) => configType !== 'single' && singlePlanOnlyCategoryIds.has(catId);
   const isMultiPlanOnlyCategory = (catId) => configType === 'combo' && multiPlanOnlyCategoryIds.has(catId);
+  const isSingleAndMultiOnlyCategory = (catId) => (configType !== 'single' && configType !== 'multi') && singleAndMultiOnlyCategoryIds.has(catId);
 
   const categoryOptions = useMemo(() =>
     pagesetCategories.map(c => {
       const singleOnly = isSinglePlanOnlyCategory(c.id);
       const multiOnly = isMultiPlanOnlyCategory(c.id);
-      const disabled = singleOnly || multiOnly;
+      const singleMultiOnly = isSingleAndMultiOnlyCategory(c.id);
+      const disabled = singleOnly || multiOnly || singleMultiOnly;
       let label = c.name;
       if (singleOnly) label = `${c.name} (Single Plan Only)`;
-      else if (multiOnly) label = `${c.name} (Multi Plan Only)`;
+      else if (multiOnly) label = `${c.name} (Plan Groups Only)`;
+      else if (singleMultiOnly) label = `${c.name} (Single Plan / Plan Groups Only)`;
       return { value: c.id, label, disabled };
     }),
     [configType]
@@ -534,11 +542,12 @@ export default function ExhibitMenuSection({
             selectedTitle="Selected Exhibits"
             availableTitle="Available Exhibits"
             renderItem={(item) => {
+              // Available items: name + image icon at end, hover shows screenshot
               const hasImage = exhibitImages && exhibitImages[item.id];
               const label = (
-                <span>
-                  {hasImage && <PictureOutlined style={{ marginRight: 4, color: '#52c41a', fontSize: 11 }} />}
-                  {item.name}
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>
+                  <span style={{ flex: 1 }}>{item.name}</span>
+                  {hasImage && <PictureOutlined style={{ color: '#52c41a', fontSize: 11, flexShrink: 0 }} />}
                 </span>
               );
               if (!hasImage) return label;
@@ -546,16 +555,87 @@ export default function ExhibitMenuSection({
                 <Popover
                   trigger="hover"
                   placement="right"
-                  content={
-                    <img src={exhibitImages[item.id]} alt={item.name} style={{ width: 400, borderRadius: 4 }} />
-                  }
+                  content={<img src={exhibitImages[item.id]} alt={item.name} style={{ width: 400, borderRadius: 4 }} />}
                   title={item.name}
                 >
                   {label}
                 </Popover>
               );
             }}
+            renderSelectedItem={(item) => {
+              // Selected items: name + header info, no image icon
+              const headers = exhibitHeaders[item.id] || ['Default'];
+              const selectedIdx = selectedHeaderMap[item.id] || 0;
+              const headerText = headers[selectedIdx] || headers[0] || 'Default';
+              const hasMultiple = headers.length > 1;
+              return (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>
+                  <Popover
+                    trigger="hover"
+                    placement="right"
+                    content={<div style={{ fontSize: 12 }}>Header: <strong>{headerText}</strong></div>}
+                  >
+                    <span style={{ flex: 1 }}>{item.name}</span>
+                  </Popover>
+                  {hasMultiple && (
+                    <InfoCircleOutlined
+                      style={{ color: '#3465CD', fontSize: 12, flexShrink: 0, cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); setHeaderModalPageset(item); }}
+                    />
+                  )}
+                </span>
+              );
+            }}
           />
+
+          {/* Header Selection Modal */}
+          <Modal
+            title={headerModalPageset ? `Select Header — ${headerModalPageset.name}` : 'Select Header'}
+            open={!!headerModalPageset}
+            onCancel={() => setHeaderModalPageset(null)}
+            footer={null}
+            width={400}
+          >
+            {headerModalPageset && (() => {
+              const headers = exhibitHeaders[headerModalPageset.id] || ['Default'];
+              const currentIdx = selectedHeaderMap[headerModalPageset.id] || 0;
+              return (
+                <div>
+                  <p style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 12 }}>
+                    Choose the header text for this exhibit in the report:
+                  </p>
+                  {headers.map((h, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        setSelectedHeaderMap(prev => ({ ...prev, [headerModalPageset.id]: idx }));
+                        setHeaderModalPageset(null);
+                      }}
+                      style={{
+                        padding: '10px 14px',
+                        border: `1px solid ${currentIdx === idx ? '#00437B' : '#d9d9d9'}`,
+                        borderRadius: 6,
+                        marginBottom: 6,
+                        cursor: 'pointer',
+                        background: currentIdx === idx ? '#edf6fb' : '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      <div style={{
+                        width: 16, height: 16, borderRadius: '50%',
+                        border: `2px solid ${currentIdx === idx ? '#00437B' : '#d9d9d9'}`,
+                        background: currentIdx === idx ? '#00437B' : '#fff',
+                        flexShrink: 0,
+                      }} />
+                      <span style={{ fontWeight: currentIdx === idx ? 600 : 400, fontSize: 13 }}>{h || '(empty)'}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </Modal>
 
           <div className="section-actions" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             {exhibitTemplateId ? (
