@@ -517,8 +517,8 @@ function App() {
         return [...updated, newConfig];
       });
       setActiveConfigId(newConfig.ReportConfigID);
-      // Persist plan-to-config assignment for new configs
-      if (configType === 'single' && selectedPlan) {
+      // Persist plan-to-config assignment for new configs (but NOT ad hoc runs)
+      if (configType === 'single' && selectedPlan && !isAdHoc) {
         assignConfigToPlan(selectedPlan, newConfig.ReportConfigID);
       }
     }
@@ -628,7 +628,7 @@ function App() {
     } else {
       // No primary — check for a previously assigned config (from manual load or save)
       const assignedConfigId = planConfigMap[selectedPlan];
-      const assignedConfig = assignedConfigId ? allConfigs.find(c => c.ReportConfigID === assignedConfigId) : null;
+      const assignedConfig = assignedConfigId ? allConfigs.find(c => c.ReportConfigID === assignedConfigId && !c._isAdHoc) : null;
 
       // Also check for most recently saved client-specific config for this plan
       const savedForPlan = allConfigs
@@ -641,8 +641,8 @@ function App() {
       if (autoConfig) {
         setActiveConfigId(autoConfig.ReportConfigID);
         setActiveConfigName(autoConfig.ReportConfigName);
-        setActiveConfigIsPrimary(false);
-        setPrimaryConfigName(null);
+        setActiveConfigIsPrimary(autoConfig.Primary || false);
+        if (autoConfig.Primary) setPrimaryConfigName(autoConfig.ReportConfigName);
         const templateName = getTemplateName(autoConfig.ExhibitTemplateID);
         const exhibitIds = getTemplateExhibitIds(autoConfig.ExhibitTemplateID);
         setLoadedConfig({
