@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1] — 2026-04-07
+
+### Pageset Updates, Dashboard Polish, Ad Hoc Exhibits
+
+**Pageset Moves & Renames**
+- Investment Policy Monitor (Active + TDF) moved to Single Plan category
+- DB Investment Policy Summary restored to original name, moved to Single Plan
+- Removed PARis Investment Policy Plan 2/3/4 variants
+- 5 new NQ Mirror pagesets added to Single Plan with Liabilities (ps-215 to ps-219)
+- Category renames: "Single Plan Only" → "Single Plan", "Multi Plan Only" → "Multi Plan", "Single Plan with Liabilities Only" → "Single Plan with Liabilities"
+
+**Dashboard Polish**
+- "Investments" column shortened to "Invmts"
+- "Completed" column shortened to "Comp %"
+
+**Ad Hoc Run Exhibits**
+- Run Now preview modal now shows each exhibit with its configured header text
+- Default headers shown in gray, custom headers in blue
+- Header text passed through from all config types (Single, Plan Groups, Combo)
+
+---
+
 ## [1.5.0] — 2026-04-07
 
 ### IM PARis Reports, Header Selection, Exhibit Screenshots

@@ -93,6 +93,8 @@ export default function SaveConfigSection({
   allPlans = [],
   otherPlansUsingConfig = [],
   childConfigExhibits = [],
+  exhibitHeaders = {},
+  selectedHeaderMap = {},
 }) {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [runNowModalOpen, setRunNowModalOpen] = useState(false);
@@ -319,19 +321,30 @@ export default function SaveConfigSection({
                 </div>
               )}
 
-              {/* Exhibit Pages — combo's own template */}
+              {/* Exhibit Pages with header text */}
               {exhibitPages.length > 0 && (
                 <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 4 }}>
                   <div style={{ background: '#fafafa', padding: '8px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <UnorderedListOutlined style={{ color: '#3465CD' }} />
                     <strong style={{ fontSize: 13 }}>Exhibits ({exhibitPages.length})</strong>
                   </div>
-                  <div style={{ padding: '8px 12px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {exhibitPages.map((page, i) => (
-                      <Tag key={page.id || i} color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
-                        {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
-                      </Tag>
-                    ))}
+                  <div style={{ padding: '8px 12px' }}>
+                    {exhibitPages.map((page, i) => {
+                      const headers = exhibitHeaders[page.id] || ['Default'];
+                      const selectedIdx = selectedHeaderMap[page.id] || 0;
+                      const headerText = headers[selectedIdx] || headers[0] || 'Default';
+                      const isCustom = headerText !== 'Default';
+                      return (
+                        <div key={page.id || i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', fontSize: 12 }}>
+                          <Tag color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0, minWidth: 0 }}>
+                            {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                          </Tag>
+                          <span style={{ color: isCustom ? '#3465CD' : '#8c8c8c', fontSize: 11 }}>
+                            — {headerText}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

@@ -461,6 +461,7 @@ export default function ComboConfig({
         isTemplateAdmin={isTemplateAdmin}
         allPlans={allPlans}
         childConfigExhibits={childConfigExhibits}
+        exhibitHeaders={exhibitHeaders}
         liveState={{
           ExhibitTemplateID: exhibitTemplateId,
           BulkRun: includeInBulk,

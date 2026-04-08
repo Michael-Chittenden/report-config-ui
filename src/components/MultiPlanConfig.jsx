@@ -571,6 +571,7 @@ export default function MultiPlanConfig({
         allTemplates={allTemplates}
         isTemplateAdmin={isTemplateAdmin}
         allPlans={allPlans}
+        exhibitHeaders={exhibitHeaders}
         liveState={{
           BulkRun: includeInBulk,
           BulkTierOverrideID: bulkUnlocked ? bulkTierOverrideId : null,

@@ -239,6 +239,7 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
         isTemplateAdmin={isTemplateAdmin}
         allPlans={allPlans}
         otherPlansUsingConfig={otherPlansUsingConfig}
+        exhibitHeaders={exhibitHeaders}
         liveState={{
           BulkRun: includeInBulk,
           BulkTierOverrideID: bulkUnlocked ? bulkTierOverrideId : null,

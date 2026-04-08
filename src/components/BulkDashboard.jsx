@@ -324,7 +324,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       ),
     },
     {
-      title: 'Investments',
+      title: 'Invmts',
       dataIndex: 'investmentCount',
       key: 'investments',
       width: 80,
@@ -334,7 +334,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       ),
     },
     {
-      title: 'Completed',
+      title: 'Comp %',
       key: 'completed',
       width: 90,
       sorter: (a, b) => a.completedCount - b.completedCount,
