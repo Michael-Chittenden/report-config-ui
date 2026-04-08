@@ -409,8 +409,8 @@ export const pagesets = [
   { id: 'ps-5', name: 'Action Items', categoryId: 1, isTab: false },
   { id: 'ps-6', name: 'Evaluation Methodology', categoryId: 1, isTab: false },
   { id: 'ps-7', name: 'Fact Sheets', categoryId: 1, isTab: false },
-  { id: 'ps-8', name: 'Investment Policy Monitor - Active', categoryId: 1, isTab: false },
-  { id: 'ps-9', name: 'Investment Policy Monitor - TDF, Passive', categoryId: 1, isTab: false },
+  { id: 'ps-8', name: 'Investment Policy Monitor - Active', categoryId: 2, isTab: false },
+  { id: 'ps-9', name: 'Investment Policy Monitor - TDF, Passive', categoryId: 2, isTab: false },
   { id: 'ps-10', name: 'TAB - Appendix', categoryId: 1, isTab: true },
   { id: 'ps-11', name: 'TAB - Fund Fact Sheets', categoryId: 1, isTab: true },
   { id: 'ps-12', name: 'TAB - Industry Updates', categoryId: 1, isTab: true },
@@ -503,14 +503,11 @@ export const pagesets = [
   { id: 'ps-112', name: 'DB Evaluation Methodology', categoryId: 1, isTab: false },
 
   // Category 7: IM PARIs Reports
-  { id: 'ps-110', name: 'PARis Investment Policy - Plan 1', categoryId: 7, isTab: false },
+  { id: 'ps-110', name: 'DB Investment Policy Summary', categoryId: 2, isTab: false },
   { id: 'ps-113', name: 'PARis Performance Book - Plan 1', categoryId: 7, isTab: false },
   { id: 'ps-120', name: 'PARis Performance Book - Plan 2', categoryId: 7, isTab: false },
   { id: 'ps-121', name: 'PARis Performance Book - Plan 3', categoryId: 7, isTab: false },
   { id: 'ps-122', name: 'PARis Performance Book - Plan 4', categoryId: 7, isTab: false },
-  { id: 'ps-123', name: 'PARis Investment Policy - Plan 2', categoryId: 7, isTab: false },
-  { id: 'ps-124', name: 'PARis Investment Policy - Plan 3', categoryId: 7, isTab: false },
-  { id: 'ps-125', name: 'PARis Investment Policy - Plan 4', categoryId: 7, isTab: false },
 ];
 
 // ===================== EXHIBIT TEMPLATE CONFIG =====================
