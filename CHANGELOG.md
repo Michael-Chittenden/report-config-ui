@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.2] — 2026-04-07
+
+### Bug Fixes & Exhibit Headers
+
+**Auto-Load Fixes**
+- Ad hoc runs no longer overwrite planConfigMap (was causing Primary shared config to not load)
+- Auto-load fallback excludes ad hoc configs from assigned config lookup
+- Auto-load preserves Primary flag from assigned config
+- Dependency array includes planConfigMap for shared config detection
+
+**Exhibit Headers in Run Preview**
+- Combo ad hoc Run Now modal shows header text for child config exhibits
+- All exhibit lists (single, plan groups, combo) show configured header text
+
+**Pageset Updates**
+- Investment Review | Select Commentary moved to Single Plan
+- Single Plan with Liabilities appears after Single Plan in category dropdown
+
+**Documentation**
+- IRP-Development-Plan.docx: 9 phases, 30+ user stories with acceptance criteria
+- Pageset Administration marked as production feature (not demo-only)
+- Technical environment: Azure SQL, MS SSO, D365 CRM integration
+
+---
+
 ## [1.5.1] — 2026-04-07
 
 ### Pageset Updates, Dashboard Polish, Ad Hoc Exhibits
