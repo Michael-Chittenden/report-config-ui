@@ -363,12 +363,22 @@ export default function SaveConfigSection({
                     )}
                     <Tag style={{ marginLeft: 'auto', fontSize: 10 }}>{child.pages.length} pages</Tag>
                   </div>
-                  <div style={{ padding: '6px 12px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {child.pages.map((page, i) => (
-                      <Tag key={page.id || i} color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
-                        {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
-                      </Tag>
-                    ))}
+                  <div style={{ padding: '6px 12px' }}>
+                    {child.pages.map((page, i) => {
+                      const headers = exhibitHeaders[page.id] || ['Default'];
+                      const headerText = headers[0] || 'Default';
+                      const isCustom = headerText !== 'Default';
+                      return (
+                        <div key={page.id || i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', fontSize: 12 }}>
+                          <Tag color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
+                            {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                          </Tag>
+                          <span style={{ color: isCustom ? '#3465CD' : '#8c8c8c', fontSize: 11 }}>
+                            — {headerText}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
