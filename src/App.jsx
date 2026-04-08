@@ -587,6 +587,7 @@ function App() {
   }, [getTemplate]);
 
   // Auto-load primary config when a plan is selected (single plan)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (configType !== 'single' || !selectedPlan) return;
     // Look for Primary: client-owned first, then any config assigned via planConfigMap that was set as Primary
@@ -710,7 +711,7 @@ function App() {
         }
       }
     }
-  }, [selectedPlan, configType]); // intentionally not including allConfigs to avoid re-triggering on save
+  }, [selectedPlan, configType, planConfigMap[selectedPlan]]); // include plan's config assignment to detect shared config Primary
 
   // Auto-load primary config for non-plan types (multi, combo, clientOnly)
   useEffect(() => {

@@ -45,10 +45,10 @@ export const bulkPctThresholds = [
 export const pagesetCategories = [
   { id: 1, name: 'Core Shared Pages (Client Level)' },
   { id: 2, name: 'Single Plan' },
+  { id: 6, name: 'Single Plan with Liabilities' },
   { id: 3, name: 'Multi Plan' },
   { id: 4, name: 'COMBO (Client) \u2011 Specific Pages' },
   { id: 5, name: 'Optional / Add\u2011On Pages' },
-  { id: 6, name: 'Single Plan with Liabilities' },
   { id: 7, name: 'IM PARIs Reports' },
 ];
 
@@ -405,7 +405,7 @@ export const pagesets = [
   { id: 'ps-1', name: 'Title Page', categoryId: 1, isTab: false },
   { id: 'ps-2', name: 'Table of Contents', categoryId: 1, isTab: false },
   { id: 'ps-3', name: 'CAPTRUST Team Members', categoryId: 1, isTab: false },
-  { id: 'ps-4', name: 'Investment Review | Select Commentary', categoryId: 1, isTab: false },
+  { id: 'ps-4', name: 'Investment Review | Select Commentary', categoryId: 2, isTab: false },
   { id: 'ps-5', name: 'Action Items', categoryId: 1, isTab: false },
   { id: 'ps-6', name: 'Evaluation Methodology', categoryId: 1, isTab: false },
   { id: 'ps-7', name: 'Fact Sheets', categoryId: 1, isTab: false },
