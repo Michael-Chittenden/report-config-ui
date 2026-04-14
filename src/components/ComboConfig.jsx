@@ -353,7 +353,7 @@ export default function ComboConfig({
       </div>
 
       {/* Sections managed by child configs — uniform disabled treatment */}
-      {['Plan Fund Changes', 'Asset Class / Manager Groups', 'QDIA Check'].map((label) => (
+      {['Plan Fund Changes', 'QDIA Check'].map((label) => (
         <div className="config-section" key={label}>
           <div className="section-header">
             <h3>

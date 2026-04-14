@@ -437,25 +437,13 @@ export default function MultiPlanConfig({
         </div>
       </div>
 
-      {/* QDIA Opt-Out */}
-      <div className="config-section">
-        <div className="section-body" style={{ padding: '12px 20px' }}>
-          <Checkbox
-            checked={qdiaOptOut}
-            onChange={(e) => setQdiaOptOut(e.target.checked)}
-          >
-            Opt out of QDIA checks
-          </Checkbox>
-        </div>
-      </div>
-
       {/* --- Included Investments Group --- */}
       <div style={{ borderLeft: '3px solid #00437B', paddingLeft: 16, marginBottom: 8, marginTop: 8 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#00437B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
           Included Investments
         </div>
         <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 12 }}>
-          Control which investments appear in the report — fund changes and candidate comparisons
+          Control which investments appear in the report
         </div>
         <FundChangesSection
           includeFundChanges={includeFundChanges}
@@ -541,6 +529,7 @@ export default function MultiPlanConfig({
       <SaveConfigSection
         configType="multi"
         qdiaOptOut={qdiaOptOut}
+        setQdiaOptOut={setQdiaOptOut}
         reportPlans={reportPlans}
         planGroupChanged={(() => {
           const currentIds = selectedPlans.map(p => p.ct_PlanID).sort();

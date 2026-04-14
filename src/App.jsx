@@ -1171,6 +1171,7 @@ function App() {
         activeConfigType={configType}
         selectedPlanId={selectedPlan}
         clientAccountId={activeClient.accountId}
+        planConfigMap={planConfigMap}
       />
 
       <MockDataAdmin

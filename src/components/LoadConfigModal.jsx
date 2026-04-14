@@ -17,7 +17,7 @@ const configTypeToString = { 1: 'single', 2: 'multi', 3: 'combo', 4: 'clientOnly
 
 const configTypeToDbType = { single: 1, multi: 2, combo: 3, clientOnly: 4 };
 
-export default function LoadConfigModal({ open, onClose, onSelect, configs = [], plans = [], onRenameConfig, onDeleteConfig, activeConfigType, selectedPlanId, clientAccountId }) {
+export default function LoadConfigModal({ open, onClose, onSelect, configs = [], plans = [], onRenameConfig, onDeleteConfig, activeConfigType, selectedPlanId, clientAccountId, planConfigMap = {} }) {
   const [search, setSearch] = useState('');
   const [showAdHoc, setShowAdHoc] = useState(false);
   const [renamingId, setRenamingId] = useState(null);
@@ -165,30 +165,53 @@ export default function LoadConfigModal({ open, onClose, onSelect, configs = [],
         </Tag>
       ),
     },
-    // Plan column — only relevant for single plan configs
+    // Plan Name column — only relevant for single plan configs
     ...(activeConfigType === 'single' ? [{
-      title: 'Plan',
-      dataIndex: 'ct_PlanID',
+      title: 'Plan Name',
       key: 'plan',
-      width: 140,
+      width: 160,
       ellipsis: true,
       sorter: (a, b) => {
         const aName = plans.find(p => p.ct_PlanID === a.ct_PlanID)?.name || '';
         const bName = plans.find(p => p.ct_PlanID === b.ct_PlanID)?.name || '';
         return aName.localeCompare(bName);
       },
-      render: (planId) => {
-        if (!planId) return <span style={{ fontSize: 11, color: '#8c8c8c' }}>—</span>;
-        const plan = plans.find(p => p.ct_PlanID === planId);
-        const name = plan ? plan.name : `Plan ${planId}`;
-        const isCurrent = planId === selectedPlanId;
-        return (
-          <Tooltip title={name}>
-            <span style={{ fontSize: 11, fontWeight: isCurrent ? 600 : 400, color: isCurrent ? '#00437B' : undefined }}>
-              {name}
-            </span>
-          </Tooltip>
-        );
+      render: (_, record) => {
+        // Client-owned config with ct_PlanID — show directly
+        if (record.ct_PlanID) {
+          const plan = plans.find(p => p.ct_PlanID === record.ct_PlanID);
+          const name = plan ? plan.name : `Plan ${record.ct_PlanID}`;
+          const isCurrent = record.ct_PlanID === selectedPlanId;
+          return (
+            <Tooltip title={name}>
+              <span style={{ fontSize: 11, fontWeight: isCurrent ? 600 : 400, color: isCurrent ? '#00437B' : undefined }}>
+                {name}
+              </span>
+            </Tooltip>
+          );
+        }
+        // Shared config — find plans in this client that use it via planConfigMap
+        if (record.AccountID === null || record.AccountID === undefined) {
+          const assignedPlanIds = Object.entries(planConfigMap)
+            .filter(([, cfgId]) => cfgId === record.ReportConfigID)
+            .map(([planId]) => Number(planId));
+          // Filter to plans in current client
+          const clientPlans = assignedPlanIds
+            .map(id => plans.find(p => p.ct_PlanID === id))
+            .filter(p => p && p.accountId === clientAccountId);
+          if (clientPlans.length === 0) {
+            return <span style={{ fontSize: 11, color: '#8c8c8c' }}>—</span>;
+          }
+          const names = clientPlans.map(p => p.name).join(', ');
+          return (
+            <Tooltip title={names}>
+              <span style={{ fontSize: 11, color: '#5B325F' }}>
+                {clientPlans.length === 1 ? clientPlans[0].name : `${clientPlans[0].name} +${clientPlans.length - 1}`}
+              </span>
+            </Tooltip>
+          );
+        }
+        return <span style={{ fontSize: 11, color: '#8c8c8c' }}>—</span>;
       },
     }] : []),
     {

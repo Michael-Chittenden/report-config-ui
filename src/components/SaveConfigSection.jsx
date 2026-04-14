@@ -79,6 +79,7 @@ function describeChange(field, oldVal, newVal, { templateLookup } = {}) {
 export default function SaveConfigSection({
   configType = 'single',
   qdiaOptOut = false,
+  setQdiaOptOut,
   onSaveConfig,
   currentPrimaryName,
   activeConfigName,
@@ -135,6 +136,10 @@ export default function SaveConfigSection({
   // Detect if a client-level config is used by other plans in the same client
   const isClientSharedConfig = !isSharedConfig && otherPlansUsingConfig.length > 0;
   const isMultiPlanConfig = isSharedConfig || isClientSharedConfig;
+
+  // Detect if the exhibit template has been changed from what was saved on the shared config
+  const exhibitTemplateChanged = isSharedConfig && savedConfigRecord &&
+    (liveState?.ExhibitTemplateID !== savedConfigRecord.ExhibitTemplateID);
 
   const warnings = [];
   if (!hasExhibitTemplate) {
@@ -408,6 +413,29 @@ export default function SaveConfigSection({
       });
       return;
     }
+    // Block non-admins from saving a shared config with a modified exhibit template
+    // Changing the exhibit template on a shared config effectively disconnects from it
+    if (isSharedConfig && exhibitTemplateChanged && !isTemplateAdmin) {
+      Modal.warning({
+        title: 'Exhibit Template Changed',
+        width: 520,
+        content: (
+          <div>
+            <p>
+              <strong>"{activeConfigName}"</strong> is a shared CAPTRUST report configuration with a locked exhibit template.
+            </p>
+            <p>
+              You have changed the exhibit template, which disconnects this plan from the shared configuration.
+              Only template administrators can modify the exhibit template on a shared report config.
+            </p>
+            <p>
+              To proceed, use <strong>"Save As New Report Config"</strong> to create a client-specific copy that includes your exhibit template changes.
+            </p>
+          </div>
+        ),
+      });
+      return;
+    }
     setConfirmModalOpen(true);
   };
 
@@ -516,8 +544,23 @@ export default function SaveConfigSection({
           Data Checks
         </div>
         <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 12 }}>
-          Compliance validations and data availability status
+          Report readiness problems and data warnings
         </div>
+        {setQdiaOptOut && (
+          <div className="config-section" style={{ marginBottom: 8 }}>
+            <div className="section-body" style={{ padding: '12px 20px' }}>
+              <Checkbox
+                checked={qdiaOptOut}
+                onChange={(e) => setQdiaOptOut(e.target.checked)}
+              >
+                Opt out of QDIA checks
+              </Checkbox>
+              <span style={{ fontSize: 12, color: '#8c8c8c', marginLeft: 8 }}>
+                (Uncheck to require QDIA assignment validation)
+              </span>
+            </div>
+          </div>
+        )}
         {warnings.map((w, idx) => (
           <Alert
             key={idx}
