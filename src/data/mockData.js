@@ -47,7 +47,7 @@ export const pagesetCategories = [
   { id: 2, name: 'Single Plan' },
   { id: 6, name: 'Single Plan with Liabilities' },
   { id: 3, name: 'Multi Plan' },
-  { id: 4, name: 'COMBO (Client) \u2011 Specific Pages' },
+  { id: 4, name: 'Client / Combo' },
   { id: 5, name: 'Optional / Add\u2011On Pages' },
   { id: 7, name: 'IM PARIs Reports' },
 ];

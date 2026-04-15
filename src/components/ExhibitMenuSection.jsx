@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Select, Button, Modal, Table, Tag, Divider, Space, Input, Popconfirm, Checkbox, Alert, Popover, message } from 'antd';
-import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined, LockOutlined, PictureOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined, LockOutlined, PictureOutlined, InfoCircleOutlined, RetweetOutlined } from '@ant-design/icons';
 import { pagesets, pagesetCategories, exhibitMenuTypes, exhibitTemplateConfigs as seedTemplates } from '../data/mockData';
 import { resolveExhibitPageSetIds, resolveExhibitIds } from '../data/dataResolvers';
 import DualListBox from './DualListBox';
@@ -13,11 +13,11 @@ const formatDate = (dateStr) => {
 };
 
 // Categories that are only available for single plan configs
-const singlePlanOnlyCategoryIds = new Set([2, 6]);
+const singlePlanOnlyCategoryIds = new Set([]);
 // Categories that are only available for multi plan configs (not combo)
 const multiPlanOnlyCategoryIds = new Set([3]);
 // Categories available for single plan AND plan groups (multi), but not combo
-const singleAndMultiOnlyCategoryIds = new Set([7]);
+const singleAndMultiOnlyCategoryIds = new Set([2, 6, 7]);
 
 export default function ExhibitMenuSection({
   configType = 'single',
@@ -48,6 +48,8 @@ export default function ExhibitMenuSection({
   const [expanded, setExpanded] = useState(false);
   const [headerModalPageset, setHeaderModalPageset] = useState(null); // pageset object for header selection modal
   const [selectedHeaderMap, setSelectedHeaderMap] = useState({}); // { pagesetId: headerIndex }
+  const [iterationModalPageset, setIterationModalPageset] = useState(null); // pageset object for plan iteration modal
+  const [planIterationMap, setPlanIterationMap] = useState({}); // { pagesetId: boolean }
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState('');
   const [saveAsShared, setSaveAsShared] = useState(false);
@@ -569,15 +571,31 @@ export default function ExhibitMenuSection({
               const selectedIdx = selectedHeaderMap[item.id] || 0;
               const headerText = headers[selectedIdx] || headers[0] || 'Default';
               const hasMultiple = headers.length > 1;
+              // Plan iteration option: only for single plan exhibits (cat 2 or 6) in plan group reports
+              const canIterate = configType === 'multi' && (item.categoryId === 2 || item.categoryId === 6);
+              const isIterated = !!planIterationMap[item.id];
+              const hoverContent = (
+                <div style={{ fontSize: 12 }}>
+                  <div>Header: <strong>{headerText}</strong></div>
+                  {canIterate && (
+                    <div style={{ marginTop: 4 }}>
+                      Plan iteration: <strong>{isIterated ? 'One per plan' : 'Single instance'}</strong>
+                    </div>
+                  )}
+                </div>
+              );
               return (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>
-                  <Popover
-                    trigger="hover"
-                    placement="right"
-                    content={<div style={{ fontSize: 12 }}>Header: <strong>{headerText}</strong></div>}
-                  >
+                  <Popover trigger="hover" placement="right" content={hoverContent}>
                     <span style={{ flex: 1 }}>{item.name}</span>
                   </Popover>
+                  {canIterate && (
+                    <RetweetOutlined
+                      title="Plan iteration"
+                      style={{ color: isIterated ? '#52c41a' : '#8c8c8c', fontSize: 12, flexShrink: 0, cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); setIterationModalPageset(item); }}
+                    />
+                  )}
                   {hasMultiple && (
                     <InfoCircleOutlined
                       style={{ color: '#3465CD', fontSize: 12, flexShrink: 0, cursor: 'pointer' }}
@@ -633,6 +651,77 @@ export default function ExhibitMenuSection({
                       <span style={{ fontWeight: currentIdx === idx ? 600 : 400, fontSize: 13 }}>{h || '(empty)'}</span>
                     </div>
                   ))}
+                </div>
+              );
+            })()}
+          </Modal>
+
+          {/* Plan Iteration Modal */}
+          <Modal
+            title={iterationModalPageset ? `Plan Iteration — ${iterationModalPageset.name}` : 'Plan Iteration'}
+            open={!!iterationModalPageset}
+            onCancel={() => setIterationModalPageset(null)}
+            footer={null}
+            width={440}
+          >
+            {iterationModalPageset && (() => {
+              const isIterated = !!planIterationMap[iterationModalPageset.id];
+              const options = [
+                {
+                  value: false,
+                  title: 'Single Instance',
+                  description: 'The exhibit appears once in the report using the default plan data.',
+                },
+                {
+                  value: true,
+                  title: 'One per Plan (Iterate)',
+                  description: 'The exhibit is repeated for each plan in the plan group, in the order the plans are defined.',
+                },
+              ];
+              return (
+                <div>
+                  <p style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 12 }}>
+                    This exhibit was designed for a single plan. Choose how it should render when used in a plan group report:
+                  </p>
+                  {options.map((opt) => {
+                    const selected = isIterated === opt.value;
+                    return (
+                      <div
+                        key={String(opt.value)}
+                        onClick={() => {
+                          setPlanIterationMap(prev => ({ ...prev, [iterationModalPageset.id]: opt.value }));
+                          setIterationModalPageset(null);
+                        }}
+                        style={{
+                          padding: '12px 14px',
+                          border: `1px solid ${selected ? '#00437B' : '#d9d9d9'}`,
+                          borderRadius: 6,
+                          marginBottom: 8,
+                          cursor: 'pointer',
+                          background: selected ? '#edf6fb' : '#fff',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 10,
+                        }}
+                      >
+                        <div style={{
+                          width: 16, height: 16, borderRadius: '50%',
+                          border: `2px solid ${selected ? '#00437B' : '#d9d9d9'}`,
+                          background: selected ? '#00437B' : '#fff',
+                          flexShrink: 0,
+                          marginTop: 2,
+                        }} />
+                        <div>
+                          <div style={{ fontWeight: selected ? 700 : 600, fontSize: 13, color: selected ? '#00437B' : '#3F3F3F' }}>
+                            {opt.title}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 2 }}>
+                            {opt.description}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })()}

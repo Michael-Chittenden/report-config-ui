@@ -148,6 +148,17 @@ export default function SaveConfigSection({
   if (!qdiaOptOut) {
     warnings.push({ type: 'qdia', message: 'QDIA option is missing (not opted out)' });
   }
+  // Check for missing required exhibit pages (Title Page and Disclosure)
+  if (hasExhibitTemplate && exhibitPages.length > 0) {
+    const hasTitlePage = exhibitPages.some(p => p.id === 'ps-1' || /title page/i.test(p.name));
+    const hasDisclosure = exhibitPages.some(p => p.id === 'ps-28' || /^disclosure/i.test(p.name));
+    if (!hasTitlePage) {
+      warnings.push({ type: 'title', message: 'No Title Page exhibit found in the selected template — consider adding one.' });
+    }
+    if (!hasDisclosure) {
+      warnings.push({ type: 'disclosure', message: 'No Disclosure exhibit found in the selected template — consider adding one.' });
+    }
+  }
   warnings.push({
     type: 'data',
     message: 'Data missing for:',

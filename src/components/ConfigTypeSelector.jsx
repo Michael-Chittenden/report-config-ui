@@ -32,14 +32,6 @@ export default function ConfigTypeSelector({ value, onChange }) {
             </span>
           ),
         },
-        {
-          value: 'clientOnly',
-          label: (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 8px' }}>
-              <TeamOutlined /> Client Only
-            </span>
-          ),
-        },
       ]}
     />
   );

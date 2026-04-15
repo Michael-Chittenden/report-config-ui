@@ -76,6 +76,7 @@ export default function ComboConfig({
   const [primaryOnlyFilter, setPrimaryOnlyFilter] = useState(false);
   const [aggregateFactSheets, setAggregateFactSheets] = useState(false);
   const [replaceSpotlights, setReplaceSpotlights] = useState(false);
+  const [qdiaOptOut, setQdiaOptOut] = useState(false);
 
   // Exhibit menu state
   const [selectedExhibitIds, setSelectedExhibitIds] = useState([]);
@@ -113,6 +114,9 @@ export default function ComboConfig({
     setExhibitTemplateName(loadedConfig.exhibitTemplateName ?? null);
     setExhibitTemplateId(loadedConfig.exhibitTemplate?.ExhibitTemplateID ?? null);
     setExhibitCategoryId(loadedConfig.exhibitCategoryId ?? 1);
+
+    // Restore QDIA
+    setQdiaOptOut(loadedConfig.qdiaOptOut ?? loadedConfig.QDIACheckOptOut ?? false);
 
     // Restore bulk run
     setIncludeInBulk(loadedConfig.includeInBulk ?? true);
@@ -353,7 +357,7 @@ export default function ComboConfig({
       </div>
 
       {/* Sections managed by child configs — uniform disabled treatment */}
-      {['Plan Fund Changes', 'QDIA Check'].map((label) => (
+      {['Plan Fund Changes'].map((label) => (
         <div className="config-section" key={label}>
           <div className="section-header">
             <h3>
@@ -442,6 +446,8 @@ export default function ComboConfig({
       />
       <SaveConfigSection
         configType="combo"
+        qdiaOptOut={qdiaOptOut}
+        setQdiaOptOut={setQdiaOptOut}
         reportPlans={comboReportPlans}
         onSaveConfig={(args) => onSaveConfig && onSaveConfig({
           ...args,
@@ -449,6 +455,7 @@ export default function ComboConfig({
           BulkRun: includeInBulk,
           BulkTierOverrideID: bulkUnlocked ? bulkTierOverrideId : null,
           BulkPctThresholdID: bulkUnlocked ? bulkPctThresholdId : null,
+          QDIACheckOptOut: qdiaOptOut,
           AggregateFactSheets: aggregateFactSheets,
           ReplaceSpotlights: replaceSpotlights,
           SelectedConfigIDs: selectedConfigs.map(c => c.ReportConfigID),
@@ -467,6 +474,7 @@ export default function ComboConfig({
           BulkRun: includeInBulk,
           BulkTierOverrideID: bulkUnlocked ? bulkTierOverrideId : null,
           BulkPctThresholdID: bulkUnlocked ? bulkPctThresholdId : null,
+          QDIACheckOptOut: qdiaOptOut,
           AggregateFactSheets: aggregateFactSheets,
           ReplaceSpotlights: replaceSpotlights,
           SelectedConfigIDs: selectedConfigs.map(c => c.ReportConfigID),
