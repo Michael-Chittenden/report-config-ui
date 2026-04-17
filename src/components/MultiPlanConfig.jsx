@@ -93,6 +93,8 @@ export default function MultiPlanConfig({
   // --- Restore state from loaded config (auto-load or manual load) ---
   useEffect(() => {
     if (!loadedConfig) return;
+    // Guard: ignore loadedConfig that was built for a different config type
+    if (loadedConfig.configType && loadedConfig.configType !== 'multi') return;
     setQdiaOptOut(loadedConfig.qdiaOptOut ?? false);
     setIncludeFundChanges(loadedConfig.includeFundChanges ?? false);
     setOptInAllFundChanges(loadedConfig.optInAllFundChanges ?? false);

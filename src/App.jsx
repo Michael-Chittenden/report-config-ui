@@ -631,6 +631,12 @@ function App() {
     return resolveExhibitPageSetIds(templateId);
   }, [getTemplate]);
 
+  // Clear stale loadedConfig when config type changes so a newly-mounted config
+  // component doesn't hydrate from a previous type's config
+  useEffect(() => {
+    setLoadedConfig(null);
+  }, [configType]);
+
   // Auto-load primary config when a plan is selected (single plan)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -837,7 +843,7 @@ function App() {
           <span className="demo-label">Demo Mode</span>
           <span>Interactive Mockup</span>
         </Space>
-        <span style={{ opacity: 0.7 }}>v1.7.1</span>
+        <span style={{ opacity: 0.7 }}>v1.7.2</span>
       </div>
 
       {/* App Header with Logo */}

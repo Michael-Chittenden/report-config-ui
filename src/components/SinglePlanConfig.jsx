@@ -52,6 +52,8 @@ export default function SinglePlanConfig({ plan, period, loadedConfig, onSaveCon
   // --- Load saved config state ---
   useEffect(() => {
     if (!loadedConfig) return;
+    // Guard: ignore loadedConfig that was built for a different config type (e.g. leftover from plan groups)
+    if (loadedConfig.configType && loadedConfig.configType !== 'single') return;
     setQdiaOptOut(loadedConfig.qdiaOptOut ?? loadedConfig.QDIACheckOptOut ?? false);
     setIncludeFundChanges(loadedConfig.includeFundChanges ?? true);
     setOptInAllFundChanges(loadedConfig.optInAllFundChanges ?? false);

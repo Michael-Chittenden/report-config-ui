@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.2] — 2026-04-17
+
+- Fix: switching config types no longer carries exhibit selections across
+  (Plan Group → Single Plan was hydrating stale plan group state into Single Plan)
+- loadedConfig is cleared when config type changes
+- Each config component guards against hydrating from a different type's loadedConfig
+
+---
+
 ## [1.7.1] — 2026-04-17
 
 - Removed "Include individual plan Asset Summaries" checkbox from Plan Group exhibit menu (behavior now managed by per-exhibit plan iteration toggle)

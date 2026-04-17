@@ -95,6 +95,8 @@ export default function ComboConfig({
   // --- Restore state from loaded config ---
   useEffect(() => {
     if (!loadedConfig) return;
+    // Guard: ignore loadedConfig that was built for a different config type
+    if (loadedConfig.configType && loadedConfig.configType !== 'combo') return;
 
     // Restore child config selections
     if (loadedConfig._selectedConfigIDs && loadedConfig._selectedConfigIDs.length > 0) {
