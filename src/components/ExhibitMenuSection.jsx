@@ -483,46 +483,6 @@ export default function ExhibitMenuSection({
             </div>
           )}
 
-          {/* Include individual plan summaries — multi plan only */}
-          {configType === 'multi' && setIncludeIndividualSummaries && (
-            <div style={{
-              background: includeIndividualSummaries ? '#edf6fb' : '#fafafa',
-              border: `1px solid ${includeIndividualSummaries ? '#5FB4E5' : '#d9d9d9'}`,
-              borderRadius: 6,
-              padding: '10px 16px',
-              marginBottom: 12,
-              transition: 'all 0.2s',
-            }}>
-              <Checkbox
-                checked={includeIndividualSummaries}
-                onChange={(e) => setIncludeIndividualSummaries(e.target.checked)}
-              >
-                <strong>Include individual plan Asset Summaries</strong>
-                <Tag style={{ marginLeft: 8, fontSize: 10 }}>Multi Plan Only</Tag>
-              </Checkbox>
-              {includeIndividualSummaries && (
-                <div style={{
-                  background: '#fffbe6',
-                  border: '1px solid #ffe58f',
-                  borderRadius: 4,
-                  padding: '8px 12px',
-                  marginTop: 8,
-                  fontSize: 12,
-                  color: '#8c6d1f',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 6,
-                }}>
-                  <WarningOutlined style={{ marginTop: 1, flexShrink: 0 }} />
-                  <span>
-                    Individual plan summaries will only be included if the <strong>Multi Asset Valuation Summary</strong> exhibit
-                    is added to the exhibit template. Make sure it is included in your selected exhibits below.
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
           <Space size="middle" style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
             <Button onClick={() => setTemplateModalOpen(true)}>
               Load Exhibit Template
