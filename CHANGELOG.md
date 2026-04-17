@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] — 2026-04-17
+
+### UX Refinements, Plan Iteration, Auto-Load Fixes
+
+**Data Checks**
+- QDIA opt-out moved to top of Data Checks section (was standalone)
+- Data Checks description: "Report readiness problems and data warnings"
+- New warning when exhibit template is missing a Title Page
+- New warning when exhibit template is missing a Disclosure page
+
+**Config Types & Categories**
+- Client Only config type hidden from selector
+- Plan Groups: Single Plan and Single Plan with Liabilities categories unlocked
+- Combo: QDIA moved to Data Checks section, removed standalone QDIA section
+- Combo: Asset Class / Manager Groups section removed
+- Category 4 renamed: "COMBO (Client)" → "Client / Combo"
+
+**Included Investments**
+- Removed candidate managers reference from description (feature hidden)
+
+**Load Config Modal**
+- "Plan" column renamed to "Plan Name"
+- Shared configs show associated plan names (via planConfigMap) for plans in current client
+
+**Shared Config Protection**
+- Non-admin users blocked from saving a shared config with a changed exhibit template
+- Prompt to "Save As New" since exhibit template change disconnects from shared config
+
+**Plan Iteration (new)**
+- Single Plan and Single Plan with Liabilities exhibits added to Plan Groups can iterate per plan
+- Repeat icon appears on applicable selected exhibits
+- Modal to choose: Single Instance vs One per Plan (Iterate)
+- Report logic will repeat the exhibit for each plan in plan group order
+
+**Auto-Load & Primary Fixes**
+- Plan Groups / Combo auto-load now falls back to most recent saved config (was only Primary)
+- Previously saved Plan Group configs now persist across view switches
+- Set as Primary button verifies config type matches current view
+- Set as Primary explicitly sets ReportConfigType to correct mismatched state
+
+**Documentation**
+- IRP-Pageset-Reference.docx: production PageSetID column added alongside prototype IDs
+- pageset-id-mapping.json for dev team migration reference
+
+---
+
 ## [1.5.2] — 2026-04-07
 
 ### Bug Fixes & Exhibit Headers

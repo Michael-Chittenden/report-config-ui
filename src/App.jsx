@@ -792,7 +792,7 @@ function App() {
           <span className="demo-label">Demo Mode</span>
           <span>Interactive Mockup</span>
         </Space>
-        <span style={{ opacity: 0.7 }}>v1.5.2</span>
+        <span style={{ opacity: 0.7 }}>v1.6.0</span>
       </div>
 
       {/* App Header with Logo */}
