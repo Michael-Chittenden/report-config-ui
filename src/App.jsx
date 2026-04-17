@@ -714,48 +714,55 @@ function App() {
   }, [selectedPlan, configType, planConfigMap[selectedPlan]]); // include plan's config assignment to detect shared config Primary
 
   // Auto-load primary config for non-plan types (multi, combo, clientOnly)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!configType || configType === 'single') return;
     const typeMap = { multi: 2, combo: 3, clientOnly: 4 };
     const dbType = typeMap[configType];
     if (!dbType) return;
+    // Find Primary first, then fall back to most recently saved non-ad-hoc config of this type
     const primaryForType = allConfigs.find(
-      c => c.Primary && c.ReportConfigType === dbType && c.AccountID === activeClient.accountId
+      c => c.Primary && c.ReportConfigType === dbType && c.AccountID === activeClient.accountId && !c._isAdHoc
     );
-    if (primaryForType) {
-      setActiveConfigId(primaryForType.ReportConfigID);
-      setActiveConfigName(primaryForType.ReportConfigName);
-      setActiveConfigIsPrimary(true);
-      setPrimaryConfigName(primaryForType.ReportConfigName);
+    const savedForType = allConfigs
+      .filter(c => c.ReportConfigType === dbType && c.AccountID === activeClient.accountId && !c._isAdHoc)
+      .sort((a, b) => new Date(b.LastSaved) - new Date(a.LastSaved))[0];
+    const autoConfig = primaryForType || savedForType;
+    if (autoConfig) {
+      setActiveConfigId(autoConfig.ReportConfigID);
+      setActiveConfigName(autoConfig.ReportConfigName);
+      setActiveConfigIsPrimary(autoConfig.Primary || false);
+      if (autoConfig.Primary) setPrimaryConfigName(autoConfig.ReportConfigName);
+      else setPrimaryConfigName(null);
       // Build a full loadedConfig so MultiPlanConfig/ComboConfig can restore all state
-      const templateName = getTemplateName(primaryForType.ExhibitTemplateID);
-      const exhibitIds = getTemplateExhibitIds(primaryForType.ExhibitTemplateID);
+      const templateName = getTemplateName(autoConfig.ExhibitTemplateID);
+      const exhibitIds = getTemplateExhibitIds(autoConfig.ExhibitTemplateID);
       setLoadedConfig({
         configType,
-        periodCode: primaryForType.PeriodType === 1 ? 'Q' : 'M',
-        includeInBulk: primaryForType.BulkRun,
-        bulkUnlocked: primaryForType.BulkTierOverrideID != null || primaryForType.BulkPctThresholdID != null,
-        bulkTierOverrideId: primaryForType.BulkTierOverrideID,
-        bulkPctThresholdId: primaryForType.BulkPctThresholdID,
-        qdiaOptOut: primaryForType.QDIACheckOptOut,
-        includeCandidates: primaryForType.CandidateInvestments,
-        includeFundChanges: primaryForType.IncludeFundChanges,
-        optInAllFundChanges: primaryForType.OptInAllFundChanges,
-        fundChangesInProgressChecks: primaryForType.FundChangesInProgress,
-        fundChangesExecutedChecks: primaryForType.FundChangesExecuted,
+        periodCode: autoConfig.PeriodType === 1 ? 'Q' : 'M',
+        includeInBulk: autoConfig.BulkRun,
+        bulkUnlocked: autoConfig.BulkTierOverrideID != null || autoConfig.BulkPctThresholdID != null,
+        bulkTierOverrideId: autoConfig.BulkTierOverrideID,
+        bulkPctThresholdId: autoConfig.BulkPctThresholdID,
+        qdiaOptOut: autoConfig.QDIACheckOptOut,
+        includeCandidates: autoConfig.CandidateInvestments,
+        includeFundChanges: autoConfig.IncludeFundChanges,
+        optInAllFundChanges: autoConfig.OptInAllFundChanges,
+        fundChangesInProgressChecks: autoConfig.FundChangesInProgress,
+        fundChangesExecutedChecks: autoConfig.FundChangesExecuted,
         exhibitTemplateName: templateName,
-        exhibitTemplate: primaryForType.ExhibitTemplateID ? { ExhibitTemplateID: primaryForType.ExhibitTemplateID } : null,
+        exhibitTemplate: autoConfig.ExhibitTemplateID ? { ExhibitTemplateID: autoConfig.ExhibitTemplateID } : null,
         selectedExhibitIds: exhibitIds,
         // Plan group data for multi plan — fall back to first saved plan group for this client
         ...(() => {
-          if (primaryForType._planIds) return { _planGroupId: primaryForType._planGroupId, _planGroupName: primaryForType._planGroupName, _planIds: primaryForType._planIds };
+          if (autoConfig._planIds) return { _planGroupId: autoConfig._planGroupId, _planGroupName: autoConfig._planGroupName, _planIds: autoConfig._planIds };
           const fallbackGroup = allPlanGroups.find(g => g.AccountID === activeClient.accountId && g.ct_PlanIDs?.length > 0);
           if (fallbackGroup) return { _planGroupId: fallbackGroup.ReportPlanGroupID, _planGroupName: fallbackGroup.ReportPlanGroupName, _planIds: fallbackGroup.ct_PlanIDs };
           return { _planGroupId: null, _planGroupName: null, _planIds: null };
         })(),
-        _selectedConfigIDs: primaryForType._selectedConfigIDs || null,
-        _aggregateFactSheets: primaryForType._aggregateFactSheets || false,
-        _replaceSpotlights: primaryForType._replaceSpotlights || false,
+        _selectedConfigIDs: autoConfig._selectedConfigIDs || null,
+        _aggregateFactSheets: autoConfig._aggregateFactSheets || false,
+        _replaceSpotlights: autoConfig._replaceSpotlights || false,
         _autoLoad: true,
         _key: Date.now(),
       });
@@ -929,9 +936,15 @@ function App() {
                   icon={<StarFilled style={{ color: '#faad14' }} />}
                   onClick={() => {
                     const configTypeId = configType === 'single' ? 1 : configType === 'multi' ? 2 : configType === 'combo' ? 3 : 4;
+                    const currentConfig = allConfigs.find(c => c.ReportConfigID === activeConfigId);
+                    // Safety: verify the active config matches the current view's config type
+                    if (currentConfig && currentConfig.ReportConfigType !== configTypeId) {
+                      message.error('Config type mismatch — please reload and try again');
+                      return;
+                    }
                     setAllConfigs(prev => prev.map(c => {
-                      // Set this config as Primary
-                      if (c.ReportConfigID === activeConfigId) return { ...c, Primary: true };
+                      // Set this config as Primary (also set ReportConfigType to current view as a safety)
+                      if (c.ReportConfigID === activeConfigId) return { ...c, Primary: true, ReportConfigType: configTypeId };
                       // Clear Primary from other configs of same type for this client/plan
                       if (c.Primary && c.ReportConfigType === configTypeId) {
                         // For client configs, match by client
