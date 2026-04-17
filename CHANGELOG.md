@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] — 2026-04-17
+
+### Critical Fix: Image Storage + Save Reliability
+
+**Root cause identified**
+- Exhibit screenshots were stored in localStorage as base64 (~1.3x file size)
+- localStorage has a ~5-10 MB quota per origin
+- A few full-size uploads would fill the quota
+- All subsequent localStorage writes (configs, plan groups, templates) silently failed
+- On reload, the app showed stale pre-save state — looking like saves "didn't work"
+
+**Fix: IndexedDB for screenshots**
+- Moved exhibit images from localStorage to IndexedDB (quota: hundreds of MB vs ~5 MB)
+- One-time automatic migration on first load (existing images preserved)
+- New utility: src/utils/imageDb.js (loadAllImages, putImage, deleteImage)
+
+**Image compression on upload**
+- Uploaded screenshots now resized to max 1200px longest edge, JPEG quality 0.8
+- Typical 2 MB screenshot → ~200 KB (10x smaller)
+- Upload toast shows compressed size
+
+**Surface storage errors**
+- All localStorage writes now use safeSetLocalStorage helper
+- First quota error surfaces a visible toast (instead of silent failure)
+- Image save failures also surface as toasts
+
+---
+
 ## [1.6.0] — 2026-04-17
 
 ### UX Refinements, Plan Iteration, Auto-Load Fixes

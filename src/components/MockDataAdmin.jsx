@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Drawer, Tabs, Table, Button, Input, Select, Space, Tag, Popconfirm, Divider, Switch, Checkbox, Popover, message } from 'antd';
 import { PlusOutlined, DeleteOutlined, ExperimentOutlined, DownloadOutlined, UploadOutlined, EditOutlined, CheckOutlined, CloseOutlined, LockOutlined, UnlockOutlined, HistoryOutlined, UnorderedListOutlined, PictureOutlined } from '@ant-design/icons';
 import { pagesets as seedPagesets, pagesetCategories } from '../data/mockData';
+import { compressImage } from '../utils/imageDb';
 import changelogRaw from '../../CHANGELOG.md?raw';
 
 const planTypes = ['DC', 'NQ', 'DB'];
@@ -972,17 +973,21 @@ export default function MockDataAdmin({
                                 const input = document.createElement('input');
                                 input.type = 'file';
                                 input.accept = '.png,.jpg,.jpeg,.gif,.webp';
-                                input.onchange = (e) => {
+                                input.onchange = async (e) => {
                                   const file = e.target.files[0];
                                   if (!file) return;
-                                  const reader = new FileReader();
-                                  reader.onload = (evt) => {
+                                  try {
+                                    // Compress to max 1200px JPEG 0.8 — massively shrinks storage footprint
+                                    const dataUrl = await compressImage(file, 1200, 0.8);
                                     if (setExhibitImages) {
-                                      setExhibitImages(prev => ({ ...prev, [page.id]: evt.target.result }));
-                                      message.success(`Screenshot uploaded for "${page.name}"`);
+                                      setExhibitImages(prev => ({ ...prev, [page.id]: dataUrl }));
+                                      const sizeKb = Math.round((dataUrl.length * 0.75) / 1024);
+                                      message.success(`Screenshot uploaded for "${page.name}" (${sizeKb} KB)`);
                                     }
-                                  };
-                                  reader.readAsDataURL(file);
+                                  } catch (err) {
+                                    console.error('Failed to compress image:', err);
+                                    message.error('Failed to process image');
+                                  }
                                 };
                                 input.click();
                               }}

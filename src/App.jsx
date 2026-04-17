@@ -10,8 +10,32 @@ import ComboConfig from './components/ComboConfig';
 import LoadConfigModal from './components/LoadConfigModal';
 import MockDataAdmin from './components/MockDataAdmin';
 import BulkDashboard from './components/BulkDashboard';
+import { loadAllImages, putImage, deleteImage, migrateFromLocalStorage } from './utils/imageDb';
 import irpLogo from './assets/irp-logo.png';
 import './App.css';
+
+// Track whether we've already warned about a quota error to avoid toast spam
+let quotaWarned = false;
+
+// Safely write to localStorage — surface quota errors to the user once
+function safeSetLocalStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    const isQuota = e && (e.name === 'QuotaExceededError' || e.code === 22 || /quota/i.test(String(e.message || '')));
+    if (isQuota && !quotaWarned) {
+      quotaWarned = true;
+      message.error({
+        content: 'Browser storage is full — your changes could not be saved. Try removing uploaded exhibit screenshots or exporting demo data to free space.',
+        duration: 8,
+      });
+    } else if (!isQuota) {
+      console.error(`Failed to save ${key}:`, e);
+    }
+    return false;
+  }
+}
 
 function App() {
   // --- Mock Data Admin: clients, plans, investments, candidates are stateful + localStorage-persisted ---
@@ -94,11 +118,11 @@ function App() {
   });
 
   // Persist mock data state
-  useEffect(() => { try { localStorage.setItem(CLIENTS_KEY, JSON.stringify(allClients)); } catch (e) {} }, [allClients]);
-  useEffect(() => { try { localStorage.setItem(PLANS_KEY, JSON.stringify(allPlans)); } catch (e) {} }, [allPlans]);
-  useEffect(() => { try { localStorage.setItem(INVESTMENTS_KEY, JSON.stringify(investments)); } catch (e) {} }, [investments]);
-  useEffect(() => { try { localStorage.setItem(CANDIDATES_KEY, JSON.stringify(candidates)); } catch (e) {} }, [candidates]);
-  useEffect(() => { try { localStorage.setItem(FUND_CHANGES_KEY, JSON.stringify(allFundChanges)); } catch (e) {} }, [allFundChanges]);
+  useEffect(() => { safeSetLocalStorage(CLIENTS_KEY, JSON.stringify(allClients)); }, [allClients]);
+  useEffect(() => { safeSetLocalStorage(PLANS_KEY, JSON.stringify(allPlans)); }, [allPlans]);
+  useEffect(() => { safeSetLocalStorage(INVESTMENTS_KEY, JSON.stringify(investments)); }, [investments]);
+  useEffect(() => { safeSetLocalStorage(CANDIDATES_KEY, JSON.stringify(candidates)); }, [candidates]);
+  useEffect(() => { safeSetLocalStorage(FUND_CHANGES_KEY, JSON.stringify(allFundChanges)); }, [allFundChanges]);
 
   const [mockAdminOpen, setMockAdminOpen] = useState(false);
 
@@ -111,20 +135,47 @@ function App() {
     } catch (e) { return false; }
   });
   useEffect(() => {
-    try { localStorage.setItem(TEMPLATE_ADMIN_KEY, String(isTemplateAdmin)); } catch (e) {}
+    safeSetLocalStorage(TEMPLATE_ADMIN_KEY, String(isTemplateAdmin));
   }, [isTemplateAdmin]);
 
   // Exhibit screenshot images (keyed by pageset ID → base64 data URL)
-  const EXHIBIT_IMAGES_KEY = 'irp-exhibit-images-v1';
-  const [exhibitImages, setExhibitImages] = useState(() => {
-    try {
-      const stored = localStorage.getItem(EXHIBIT_IMAGES_KEY);
-      return stored ? JSON.parse(stored) : {};
-    } catch (e) { return {}; }
-  });
+  // Stored in IndexedDB (not localStorage) because images quickly exceed the 5-10 MB localStorage quota
+  const [exhibitImages, setExhibitImagesState] = useState({});
+
+  // One-time migration from legacy localStorage key + initial load from IndexedDB
   useEffect(() => {
-    try { localStorage.setItem(EXHIBIT_IMAGES_KEY, JSON.stringify(exhibitImages)); } catch (e) {}
-  }, [exhibitImages]);
+    (async () => {
+      await migrateFromLocalStorage('irp-exhibit-images-v1');
+      const imgs = await loadAllImages();
+      setExhibitImagesState(imgs);
+    })();
+  }, []);
+
+  // setExhibitImages accepts either an object or an updater function, writes diffs to IndexedDB
+  const setExhibitImages = useCallback((updater) => {
+    setExhibitImagesState(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      // Figure out adds/updates and deletes
+      const prevKeys = new Set(Object.keys(prev));
+      const nextKeys = new Set(Object.keys(next));
+      // Write new/updated images
+      for (const key of nextKeys) {
+        if (prev[key] !== next[key]) {
+          putImage(key, next[key]).catch(err => {
+            console.error('Failed to save exhibit image:', err);
+            message.error('Failed to save exhibit image — storage may be full');
+          });
+        }
+      }
+      // Delete removed images
+      for (const key of prevKeys) {
+        if (!nextKeys.has(key)) {
+          deleteImage(key).catch(err => console.error('Failed to delete exhibit image:', err));
+        }
+      }
+      return next;
+    });
+  }, []);
 
   // Exhibit header text options (keyed by pageset ID → array of header strings, index 0 = "Default")
   const EXHIBIT_HEADERS_KEY = 'irp-exhibit-headers-v1';
@@ -135,7 +186,7 @@ function App() {
     } catch (e) { return {}; }
   });
   useEffect(() => {
-    try { localStorage.setItem(EXHIBIT_HEADERS_KEY, JSON.stringify(exhibitHeaders)); } catch (e) {}
+    safeSetLocalStorage(EXHIBIT_HEADERS_KEY, JSON.stringify(exhibitHeaders));
   }, [exhibitHeaders]);
 
   // Client switcher (demo only — in production this comes from CRM context)
@@ -192,9 +243,7 @@ function App() {
 
   // Persist allConfigs to localStorage whenever it changes
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allConfigs));
-    } catch (e) { /* ignore quota errors */ }
+    safeSetLocalStorage(STORAGE_KEY, JSON.stringify(allConfigs));
   }, [allConfigs]);
 
   // --- Exhibit Templates: persisted in localStorage ---
@@ -210,9 +259,7 @@ function App() {
     return [...seedTemplates];
   });
   useEffect(() => {
-    try {
-      localStorage.setItem(TEMPLATES_KEY, JSON.stringify(allTemplates));
-    } catch (e) { /* ignore */ }
+    safeSetLocalStorage(TEMPLATES_KEY, JSON.stringify(allTemplates));
   }, [allTemplates]);
 
   const handleSaveTemplate = (template) => {
@@ -244,9 +291,7 @@ function App() {
     return [...seedPlanGroups];
   });
   useEffect(() => {
-    try {
-      localStorage.setItem(PLAN_GROUPS_KEY, JSON.stringify(allPlanGroups));
-    } catch (e) { /* ignore */ }
+    safeSetLocalStorage(PLAN_GROUPS_KEY, JSON.stringify(allPlanGroups));
   }, [allPlanGroups]);
 
   const handleSavePlanGroup = (group) => {
@@ -285,7 +330,7 @@ function App() {
     } catch (e) { return {}; }
   });
   useEffect(() => {
-    try { localStorage.setItem(PLAN_CONFIG_MAP_KEY, JSON.stringify(planConfigMap)); } catch (e) {}
+    safeSetLocalStorage(PLAN_CONFIG_MAP_KEY, JSON.stringify(planConfigMap));
   }, [planConfigMap]);
 
   // Helper: remember which config was loaded/saved for a plan
@@ -792,7 +837,7 @@ function App() {
           <span className="demo-label">Demo Mode</span>
           <span>Interactive Mockup</span>
         </Space>
-        <span style={{ opacity: 0.7 }}>v1.6.0</span>
+        <span style={{ opacity: 0.7 }}>v1.7.0</span>
       </div>
 
       {/* App Header with Logo */}
