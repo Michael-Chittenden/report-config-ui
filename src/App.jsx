@@ -422,6 +422,7 @@ function App() {
         _selectedConfigIDs: config._selectedConfigIDs || null,
         _aggregateFactSheets: config._aggregateFactSheets || false,
         _replaceSpotlights: config._replaceSpotlights || false,
+        _comboSuppressMap: config._comboSuppressMap || {},
         _key: Date.now(),
       });
       setLoadCounter(prev => prev + 1);
@@ -450,6 +451,7 @@ function App() {
         _selectedConfigIDs: config._selectedConfigIDs || null,
         _aggregateFactSheets: config._aggregateFactSheets || false,
         _replaceSpotlights: config._replaceSpotlights || false,
+        _comboSuppressMap: config._comboSuppressMap || {},
         _key: Date.now(),
       });
       setLoadCounter(prev => prev + 1);
@@ -457,7 +459,7 @@ function App() {
     setLoadConfigOpen(false);
   };
 
-  const handleSaveConfig = ({ name, type, primary, shared, isUpdate, isAdHoc, adHocPeriod, associationOnly, ExhibitTemplateID, BulkRun, BulkTierOverrideID, BulkPctThresholdID, QDIACheckOptOut, CandidateInvestments, IncludeFundChanges, OptInAllFundChanges, FundChangesInProgress, FundChangesExecuted, _planGroupId, _planGroupName, _planIds, SelectedConfigIDs, AggregateFactSheets, ReplaceSpotlights }) => {
+  const handleSaveConfig = ({ name, type, primary, shared, isUpdate, isAdHoc, adHocPeriod, associationOnly, ExhibitTemplateID, BulkRun, BulkTierOverrideID, BulkPctThresholdID, QDIACheckOptOut, CandidateInvestments, IncludeFundChanges, OptInAllFundChanges, FundChangesInProgress, FundChangesExecuted, _planGroupId, _planGroupName, _planIds, SelectedConfigIDs, AggregateFactSheets, ReplaceSpotlights, _comboSuppressMap }) => {
     const configTypeId = type === 'CAPTRUST Shared' ? 1 : (configType === 'single' ? 1 : configType === 'multi' ? 2 : configType === 'combo' ? 3 : 4);
     const planId = configType === 'single' ? selectedPlan : null;
 
@@ -497,6 +499,7 @@ function App() {
               _selectedConfigIDs: SelectedConfigIDs !== undefined ? SelectedConfigIDs : c._selectedConfigIDs,
               _aggregateFactSheets: AggregateFactSheets !== undefined ? AggregateFactSheets : c._aggregateFactSheets,
               _replaceSpotlights: ReplaceSpotlights !== undefined ? ReplaceSpotlights : c._replaceSpotlights,
+              _comboSuppressMap: _comboSuppressMap !== undefined ? _comboSuppressMap : c._comboSuppressMap,
             };
           }
           return c;
@@ -546,6 +549,7 @@ function App() {
         _selectedConfigIDs: SelectedConfigIDs || null,
         _aggregateFactSheets: AggregateFactSheets || false,
         _replaceSpotlights: ReplaceSpotlights || false,
+        _comboSuppressMap: _comboSuppressMap || {},
       };
 
       setAllConfigs(prev => {
@@ -814,6 +818,7 @@ function App() {
         _selectedConfigIDs: autoConfig._selectedConfigIDs || null,
         _aggregateFactSheets: autoConfig._aggregateFactSheets || false,
         _replaceSpotlights: autoConfig._replaceSpotlights || false,
+        _comboSuppressMap: autoConfig._comboSuppressMap || {},
         _autoLoad: true,
         _key: Date.now(),
       });
@@ -843,7 +848,7 @@ function App() {
           <span className="demo-label">Demo Mode</span>
           <span>Interactive Mockup</span>
         </Space>
-        <span style={{ opacity: 0.7 }}>v1.8.0</span>
+        <span style={{ opacity: 0.7 }}>v1.9.0</span>
       </div>
 
       {/* App Header with Logo */}

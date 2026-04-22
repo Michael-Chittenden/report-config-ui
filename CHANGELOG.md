@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0] — 2026-04-17
+
+### Combo Child Suppression + COMBO Pagesets
+
+**Combo child exhibit suppression**
+- When a Core Shared (Cat 1) pageset is added to a Combo exhibit template,
+  a red/gray stop icon appears in the Selected Exhibits list
+- Clicking toggles suppression of matching pagesets in child configs at render time
+- Lets users build real Combo-level cover pages (Title, ToC, Market Commentary,
+  spotlights) without duplicating those pages from each child config
+- Persisted on the combo config record as _comboSuppressMap
+- Rendering (actual deduplication) is handled by the backend report generator
+
+**New COMBO pagesets**
+- ps-82 COMBO Table of Contents
+- ps-83 COMBO Selected Report Configurations — placeholder marking where
+  child config pages stitch into the output (pagesets above render before,
+  pagesets below render after)
+
+**Icons**
+- Consolidated type icon: MergeCellsOutlined (merger of plans)
+- Combo type icon: BlockOutlined (distinct blocks stitched together)
+
+---
+
 ## [1.8.0] — 2026-04-17
 
 ### Renamed Report Config Type + Type Descriptions

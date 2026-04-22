@@ -83,6 +83,10 @@ export default function ComboConfig({
   const [exhibitTemplateName, setExhibitTemplateName] = useState(null);
   const [exhibitTemplateId, setExhibitTemplateId] = useState(null);
   const [exhibitCategoryId, setExhibitCategoryId] = useState(1);
+  // Combo-level suppression of duplicate Core Shared pagesets — { pagesetId: true }
+  // When a user adds a Core Shared pageset at Combo level and toggles suppress,
+  // the same pageset is hidden from all child configs at render time.
+  const [comboSuppressMap, setComboSuppressMap] = useState({});
 
   // Bulk run state (lifted)
   const [includeInBulk, setIncludeInBulk] = useState(true);
@@ -116,6 +120,7 @@ export default function ComboConfig({
     setExhibitTemplateName(loadedConfig.exhibitTemplateName ?? null);
     setExhibitTemplateId(loadedConfig.exhibitTemplate?.ExhibitTemplateID ?? null);
     setExhibitCategoryId(loadedConfig.exhibitCategoryId ?? 1);
+    setComboSuppressMap(loadedConfig._comboSuppressMap ?? {});
 
     // Restore QDIA
     setQdiaOptOut(loadedConfig.qdiaOptOut ?? loadedConfig.QDIACheckOptOut ?? false);
@@ -435,6 +440,8 @@ export default function ComboConfig({
         isTemplateAdmin={isTemplateAdmin}
         exhibitImages={exhibitImages}
         exhibitHeaders={exhibitHeaders}
+        comboSuppressMap={comboSuppressMap}
+        setComboSuppressMap={setComboSuppressMap}
       />
       <BulkRunSection
         includeInBulk={includeInBulk}
@@ -461,6 +468,7 @@ export default function ComboConfig({
           AggregateFactSheets: aggregateFactSheets,
           ReplaceSpotlights: replaceSpotlights,
           SelectedConfigIDs: selectedConfigs.map(c => c.ReportConfigID),
+          _comboSuppressMap: comboSuppressMap,
         })}
         currentPrimaryName={currentPrimaryName}
         activeConfigName={activeConfigName}

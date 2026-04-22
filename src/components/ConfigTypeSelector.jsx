@@ -1,5 +1,5 @@
 import { Segmented, Tooltip } from 'antd';
-import { FileTextOutlined, CopyOutlined, MergeCellsOutlined } from '@ant-design/icons';
+import { FileTextOutlined, CopyOutlined, MergeCellsOutlined, BlockOutlined } from '@ant-design/icons';
 
 const typeDescriptions = {
   single: 'Single Plan — Report for one plan with its investments, fund changes, and exhibit template.',
@@ -30,7 +30,7 @@ export default function ConfigTypeSelector({ value, onChange }) {
             label: (
               <Tooltip title={typeDescriptions.multi} placement="bottom">
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 8px' }}>
-                  <CopyOutlined /> Consolidated
+                  <MergeCellsOutlined /> Consolidated
                 </span>
               </Tooltip>
             ),
@@ -40,7 +40,7 @@ export default function ConfigTypeSelector({ value, onChange }) {
             label: (
               <Tooltip title={typeDescriptions.combo} placement="bottom">
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 8px' }}>
-                  <MergeCellsOutlined /> Combo
+                  <BlockOutlined /> Combo
                 </span>
               </Tooltip>
             ),

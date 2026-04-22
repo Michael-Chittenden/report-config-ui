@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Select, Button, Modal, Table, Tag, Divider, Space, Input, Popconfirm, Checkbox, Alert, Popover, message } from 'antd';
-import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined, LockOutlined, PictureOutlined, InfoCircleOutlined, RetweetOutlined } from '@ant-design/icons';
+import { UnorderedListOutlined, DownOutlined, RightOutlined, SaveOutlined, StarFilled, FileTextOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ShareAltOutlined, WarningOutlined, LockOutlined, PictureOutlined, InfoCircleOutlined, RetweetOutlined, StopOutlined } from '@ant-design/icons';
 import { pagesets, pagesetCategories, exhibitMenuTypes, exhibitTemplateConfigs as seedTemplates } from '../data/mockData';
 import { resolveExhibitPageSetIds, resolveExhibitIds } from '../data/dataResolvers';
 import DualListBox from './DualListBox';
@@ -44,6 +44,8 @@ export default function ExhibitMenuSection({
   isTemplateAdmin = false,
   exhibitImages = {},
   exhibitHeaders = {},
+  comboSuppressMap = {},
+  setComboSuppressMap,
 }) {
   const [expanded, setExpanded] = useState(false);
   const [headerModalPageset, setHeaderModalPageset] = useState(null); // pageset object for header selection modal
@@ -534,12 +536,20 @@ export default function ExhibitMenuSection({
               // Plan iteration option: only for single plan exhibits (cat 2 or 6) in plan group reports
               const canIterate = configType === 'multi' && (item.categoryId === 2 || item.categoryId === 6);
               const isIterated = !!planIterationMap[item.id];
+              // Child suppression: only for Core Shared (cat 1) exhibits in combo reports
+              const canSuppress = configType === 'combo' && item.categoryId === 1 && setComboSuppressMap;
+              const isSuppressing = !!comboSuppressMap[item.id];
               const hoverContent = (
                 <div style={{ fontSize: 12 }}>
                   <div>Header: <strong>{headerText}</strong></div>
                   {canIterate && (
                     <div style={{ marginTop: 4 }}>
                       Plan iteration: <strong>{isIterated ? 'One per plan' : 'Single instance'}</strong>
+                    </div>
+                  )}
+                  {canSuppress && (
+                    <div style={{ marginTop: 4 }}>
+                      Child suppression: <strong>{isSuppressing ? 'Suppressed in children' : 'Not suppressed'}</strong>
                     </div>
                   )}
                 </div>
@@ -554,6 +564,21 @@ export default function ExhibitMenuSection({
                       title="Plan iteration"
                       style={{ color: isIterated ? '#52c41a' : '#8c8c8c', fontSize: 12, flexShrink: 0, cursor: 'pointer' }}
                       onClick={(e) => { e.stopPropagation(); setIterationModalPageset(item); }}
+                    />
+                  )}
+                  {canSuppress && (
+                    <StopOutlined
+                      title={isSuppressing ? 'Suppress matching exhibit in child configs (active)' : 'Suppress matching exhibit in child configs'}
+                      style={{ color: isSuppressing ? '#ff4d4f' : '#8c8c8c', fontSize: 12, flexShrink: 0, cursor: 'pointer' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setComboSuppressMap(prev => {
+                          const next = { ...prev };
+                          if (next[item.id]) delete next[item.id];
+                          else next[item.id] = true;
+                          return next;
+                        });
+                      }}
                     />
                   )}
                   {hasMultiple && (
