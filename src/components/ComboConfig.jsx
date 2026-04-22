@@ -343,26 +343,6 @@ export default function ComboConfig({
         </div>
       </div>
 
-      {/* Combo Options */}
-      <div className="config-section">
-        <div className="section-body" style={{ padding: '12px 20px' }}>
-          <Space direction="vertical">
-            <Checkbox
-              checked={aggregateFactSheets}
-              onChange={(e) => setAggregateFactSheets(e.target.checked)}
-            >
-              Aggregate Fact Sheets across children plans
-            </Checkbox>
-            <Checkbox
-              checked={replaceSpotlights}
-              onChange={(e) => setReplaceSpotlights(e.target.checked)}
-            >
-              Replace topical spotlights with Combo level
-            </Checkbox>
-          </Space>
-        </div>
-      </div>
-
       {/* Sections managed by child configs — uniform disabled treatment */}
       {['Plan Fund Changes'].map((label) => (
         <div className="config-section" key={label}>

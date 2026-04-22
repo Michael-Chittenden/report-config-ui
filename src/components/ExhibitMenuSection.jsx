@@ -537,8 +537,22 @@ export default function ExhibitMenuSection({
               const canIterate = configType === 'multi' && (item.categoryId === 2 || item.categoryId === 6);
               const isIterated = !!planIterationMap[item.id];
               // Child suppression: only for Core Shared (cat 1) exhibits in combo reports
+              // States: undefined/false (off), 'children' (suppress only children), 'all' (suppress combo + children = marker only)
               const canSuppress = configType === 'combo' && item.categoryId === 1 && setComboSuppressMap;
-              const isSuppressing = !!comboSuppressMap[item.id];
+              const suppressState = comboSuppressMap[item.id];
+              const isSuppressChildren = suppressState === 'children' || suppressState === true; // true = legacy value
+              const isMarkerOnly = suppressState === 'all';
+              const isSuppressing = isSuppressChildren || isMarkerOnly;
+              const suppressLabel = isMarkerOnly
+                ? 'Suppress all — hidden at combo level and in children'
+                : isSuppressChildren
+                  ? 'Suppress children — renders at combo level; matching hidden in children'
+                  : 'No suppression — renders at combo and children';
+              const nextSuppressState = (cur) => {
+                if (!cur) return 'children';
+                if (cur === 'children' || cur === true) return 'all';
+                return undefined; // from 'all' back to off
+              };
               const hoverContent = (
                 <div style={{ fontSize: 12 }}>
                   <div>Header: <strong>{headerText}</strong></div>
@@ -549,7 +563,7 @@ export default function ExhibitMenuSection({
                   )}
                   {canSuppress && (
                     <div style={{ marginTop: 4 }}>
-                      Child suppression: <strong>{isSuppressing ? 'Suppressed in children' : 'Not suppressed'}</strong>
+                      Suppression: <strong>{isMarkerOnly ? 'Suppress all' : isSuppressChildren ? 'Suppress children' : 'Off'}</strong>
                     </div>
                   )}
                 </div>
@@ -557,7 +571,11 @@ export default function ExhibitMenuSection({
               return (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>
                   <Popover trigger="hover" placement="right" content={hoverContent}>
-                    <span style={{ flex: 1 }}>{item.name}</span>
+                    <span style={{ flex: 1, fontStyle: isMarkerOnly ? 'italic' : 'normal', color: isMarkerOnly ? '#8c8c8c' : undefined }}>
+                      {item.name}
+                      {isMarkerOnly && <span style={{ fontSize: 10, marginLeft: 6, color: '#ff4d4f' }}>(suppress all)</span>}
+                      {isSuppressChildren && <span style={{ fontSize: 10, marginLeft: 6, color: '#fa8c16' }}>(suppress children)</span>}
+                    </span>
                   </Popover>
                   {canIterate && (
                     <RetweetOutlined
@@ -568,14 +586,15 @@ export default function ExhibitMenuSection({
                   )}
                   {canSuppress && (
                     <StopOutlined
-                      title={isSuppressing ? 'Suppress matching exhibit in child configs (active)' : 'Suppress matching exhibit in child configs'}
-                      style={{ color: isSuppressing ? '#ff4d4f' : '#8c8c8c', fontSize: 12, flexShrink: 0, cursor: 'pointer' }}
+                      title={`${suppressLabel} — click to cycle`}
+                      style={{ color: isMarkerOnly ? '#ff4d4f' : isSuppressChildren ? '#fa8c16' : '#8c8c8c', fontSize: 12, flexShrink: 0, cursor: 'pointer' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         setComboSuppressMap(prev => {
                           const next = { ...prev };
-                          if (next[item.id]) delete next[item.id];
-                          else next[item.id] = true;
+                          const ns = nextSuppressState(prev[item.id]);
+                          if (ns === undefined) delete next[item.id];
+                          else next[item.id] = ns;
                           return next;
                         });
                       }}

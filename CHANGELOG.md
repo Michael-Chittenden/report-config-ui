@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.0] — 2026-04-17
+
+### Three-State Suppression, Removed Combo Options
+
+- Combo suppression toggle is now a three-state cycle on Core Shared pagesets:
+  Off → Suppress children (orange) → Suppress all (red) → Off
+- "Suppress children" renders at combo, hides matching in children (e.g. Market Commentary)
+- "Suppress all" hides the exhibit at combo AND children (e.g. Title Page when using COMBO Title Page instead)
+- Visual indicators: orange/red icon + inline label next to exhibit name
+- Hover tooltip shows current state
+- Backward compat: existing `true` values treated as "suppress children"
+- Removed "Aggregate Fact Sheets across children plans" checkbox (replaced by per-exhibit suppression)
+- Removed "Replace topical spotlights with Combo level" checkbox (replaced by per-exhibit suppression)
+
+---
+
 ## [1.9.0] — 2026-04-17
 
 ### Combo Child Suppression + COMBO Pagesets
