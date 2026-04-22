@@ -86,8 +86,8 @@ export default function ExhibitMenuSection({
       const disabled = singleOnly || multiOnly || singleMultiOnly;
       let label = c.name;
       if (singleOnly) label = `${c.name} (Single Plan Only)`;
-      else if (multiOnly) label = `${c.name} (Plan Groups Only)`;
-      else if (singleMultiOnly) label = `${c.name} (Single Plan / Plan Groups Only)`;
+      else if (multiOnly) label = `${c.name} (Consolidated Only)`;
+      else if (singleMultiOnly) label = `${c.name} (Single Plan / Consolidated Only)`;
       return { value: c.id, label, disabled };
     }),
     [configType]

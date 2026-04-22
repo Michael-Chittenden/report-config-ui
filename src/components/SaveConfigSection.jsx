@@ -204,7 +204,7 @@ export default function SaveConfigSection({
       if (onSaveConfig) {
         onSaveConfig({
           name: saveName,
-          type: shareAsTemplate ? 'CAPTRUST Shared' : `Client ${configType === 'single' ? 'Single' : configType === 'multi' ? 'Multi' : 'Combo'} Plan`,
+          type: shareAsTemplate ? 'CAPTRUST Shared' : `Client ${configType === 'single' ? 'Single Plan' : configType === 'multi' ? 'Consolidated' : 'Combo'}`,
           primary: setAsPrimary,
           shared: shareAsTemplate,
           isUpdate: hasActiveConfig && !isSaveAs,
@@ -459,7 +459,7 @@ export default function SaveConfigSection({
       if (onSaveConfig) {
         onSaveConfig({
           name: activeConfigName,
-          type: `Client ${configType === 'single' ? 'Single' : configType === 'multi' ? 'Multi' : 'Combo'} Plan`,
+          type: `Client ${configType === 'single' ? 'Single Plan' : configType === 'multi' ? 'Consolidated' : 'Combo'}`,
           primary: false,
           shared: false,
           isUpdate: false,
@@ -479,7 +479,7 @@ export default function SaveConfigSection({
       if (onSaveConfig) {
         onSaveConfig({
           name: activeConfigName,
-          type: `Client ${configType === 'single' ? 'Single' : configType === 'multi' ? 'Multi' : 'Combo'} Plan`,
+          type: `Client ${configType === 'single' ? 'Single Plan' : configType === 'multi' ? 'Consolidated' : 'Combo'}`,
           primary: false,
           shared: false,
           isUpdate: true,

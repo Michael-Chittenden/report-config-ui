@@ -290,7 +290,7 @@ export default function LoadConfigModal({ open, onClose, onSelect, configs = [],
     data.filter(c => c.ReportConfigName.toLowerCase().includes(search.toLowerCase()));
 
   const typeLabel = activeConfigType
-    ? { single: 'Single Plan', multi: 'Multi Plan', combo: 'Combo', clientOnly: 'Client Only' }[activeConfigType]
+    ? { single: 'Single Plan', multi: 'Consolidated', combo: 'Combo', clientOnly: 'Client Only' }[activeConfigType]
     : null;
 
   return (

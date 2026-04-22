@@ -250,7 +250,7 @@ export default function BulkDashboard({ allConfigs = [], allClients = [], allPla
       width: 100,
       filters: [
         { text: 'Single Plan', value: 1 },
-        { text: 'Multi Plan', value: 2 },
+        { text: 'Consolidated', value: 2 },
         { text: 'Combo', value: 3 },
         { text: 'Client Only', value: 4 },
       ],

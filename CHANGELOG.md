@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] — 2026-04-17
+
+### Renamed Report Config Type + Type Descriptions
+
+**Report config type renamed**
+- "Plan Groups" report configuration type renamed to "Consolidated"
+- Disambiguates from the Plan Group feature (grouping of plans within Consolidated)
+  and from Multi Plan exhibit templates (those still called Multi Plan)
+- Updated in: config type selector, Load Config modal, Bulk Dashboard filters,
+  exhibit category restrictions, combo description, fund changes / manager groups
+  managed-by notes, save type display strings, seed data _displayType
+
+**Type descriptions**
+- Each config type tab now has a hover tooltip explaining what it does
+- Descriptive text line appears below the selector showing details for the selected type
+- Single Plan: single plan with investments, fund changes, exhibits
+- Consolidated: combines multiple plans; Plan Groups define inclusion; exhibits aggregate or iterate
+- Combo: stitches Single Plan + Consolidated configs together
+
+---
+
 ## [1.7.2] — 2026-04-17
 
 - Fix: switching config types no longer carries exhibit selections across

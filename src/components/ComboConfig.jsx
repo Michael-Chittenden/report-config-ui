@@ -242,7 +242,7 @@ export default function ComboConfig({
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        message="Combo reports combine multiple Single Plan and Plan Group report configurations into a unified report."
+        message="Combo reports combine multiple Single Plan and Consolidated report configurations into a unified report."
       />
 
       {/* Config Selection */}

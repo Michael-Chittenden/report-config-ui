@@ -59,7 +59,7 @@ export default function FundChangesSection({
             type="info"
             showIcon
             icon={<InfoCircleOutlined />}
-            message="Fund changes are managed within the individual Single Plan and Multi Plan configurations selected above. Each child config carries its own plan fund change selections."
+            message="Fund changes are managed within the individual Single Plan and Consolidated configurations selected above. Each child config carries its own plan fund change selections."
             style={{ fontSize: 13 }}
           />
         </div>

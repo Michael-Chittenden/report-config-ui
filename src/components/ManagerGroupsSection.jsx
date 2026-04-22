@@ -37,7 +37,7 @@ export default function ManagerGroupsSection({
           <Alert
             type="info"
             showIcon
-            message="Asset class and manager group settings are managed within the individual Single Plan and Multi Plan configurations selected above."
+            message="Asset class and manager group settings are managed within the individual Single Plan and Consolidated configurations selected above."
             style={{ fontSize: 13 }}
           />
         </div>
