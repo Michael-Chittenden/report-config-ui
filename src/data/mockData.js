@@ -421,6 +421,7 @@ export const pagesets = [
   { id: 'ps-17', name: 'DB Topical Spotlight', categoryId: 1, isTab: false },
   { id: 'ps-18', name: 'DC Topical Spotlight', categoryId: 1, isTab: false },
   { id: 'ps-19', name: 'NQ Topical Spotlight', categoryId: 1, isTab: false },
+  { id: 'ps-29', name: 'EF Topical Spotlight', categoryId: 1, isTab: false },
   { id: 'ps-20', name: 'Action Items | Notes', categoryId: 1, isTab: false },
   { id: 'ps-21', name: 'TAB - Executive Summary', categoryId: 1, isTab: true },
   { id: 'ps-22', name: 'TAB - Due Diligence', categoryId: 1, isTab: true },
@@ -469,6 +470,7 @@ export const pagesets = [
   // Category 4: COMBO (Client) - Specific Pages
   { id: 'ps-69', name: 'COMBO Title Page', categoryId: 4, isTab: false },
   { id: 'ps-82', name: 'COMBO Table of Contents', categoryId: 4, isTab: false },
+  { id: 'ps-84', name: 'COMBO Topical Spotlight', categoryId: 4, isTab: false },
   { id: 'ps-83', name: 'COMBO Selected Report Configurations', categoryId: 4, isTab: false },
   { id: 'ps-70', name: 'COMBO Fact Sheets', categoryId: 4, isTab: false },
   { id: 'ps-71', name: 'At Work - Table of Contents', categoryId: 4, isTab: false },

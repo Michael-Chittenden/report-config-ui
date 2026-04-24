@@ -459,6 +459,7 @@ export default function ComboConfig({
         allPlans={allPlans}
         childConfigExhibits={childConfigExhibits}
         exhibitHeaders={exhibitHeaders}
+        comboSuppressMap={comboSuppressMap}
         liveState={{
           ExhibitTemplateID: exhibitTemplateId,
           BulkRun: includeInBulk,

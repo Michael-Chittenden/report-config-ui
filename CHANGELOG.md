@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.1] — 2026-04-17
+
+- New pageset: ps-84 "COMBO Topical Spotlight" (category 4)
+- New pageset: ps-29 "EF Topical Spotlight" (category 1, Core Shared)
+- Combo ad hoc Run Now preview now applies suppression logic:
+  - "Suppress all" pagesets hidden from combo's own exhibit list (shows suppressed count)
+  - "Suppress children" pagesets filtered from each child config's exhibit list
+  - Child config sections with all exhibits suppressed are omitted
+
+---
+
 ## [1.10.0] — 2026-04-17
 
 ### Three-State Suppression, Removed Combo Options

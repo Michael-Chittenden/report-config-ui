@@ -96,6 +96,7 @@ export default function SaveConfigSection({
   childConfigExhibits = [],
   exhibitHeaders = {},
   selectedHeaderMap = {},
+  comboSuppressMap = {},
 }) {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [runNowModalOpen, setRunNowModalOpen] = useState(false);
@@ -124,6 +125,34 @@ export default function SaveConfigSection({
       : resolveExhibitPageSetIds(liveState.ExhibitTemplateID);
     return ids.map(id => pagesets.find(p => p.id === id)).filter(Boolean);
   }, [liveState?.ExhibitTemplateID, allTemplates]);
+
+  // For combo ad hoc preview: filter combo-level pages to hide those flagged 'all'
+  // (children-only suppressions stay at combo level)
+  const effectiveComboPages = useMemo(() => {
+    if (configType !== 'combo') return exhibitPages;
+    return exhibitPages.filter(p => comboSuppressMap[p.id] !== 'all');
+  }, [exhibitPages, comboSuppressMap, configType]);
+
+  // For combo ad hoc preview: filter child config pages to hide those matching any suppress entry
+  // ('children' or 'all' both mean: remove from children)
+  const suppressedIds = useMemo(() => {
+    if (configType !== 'combo') return new Set();
+    return new Set(
+      Object.entries(comboSuppressMap)
+        .filter(([, v]) => v === 'children' || v === 'all' || v === true)
+        .map(([k]) => k)
+    );
+  }, [comboSuppressMap, configType]);
+
+  const effectiveChildConfigExhibits = useMemo(() => {
+    if (configType !== 'combo' || suppressedIds.size === 0) return childConfigExhibits;
+    return childConfigExhibits
+      .map(child => ({
+        ...child,
+        pages: child.pages.filter(p => !suppressedIds.has(p.id)),
+      }))
+      .filter(child => child.pages.length > 0);
+  }, [childConfigExhibits, suppressedIds, configType]);
 
   // Detect if the active config is a CAPTRUST-wide shared config (AccountID === null)
   const isSharedConfig = savedConfigRecord && (savedConfigRecord.AccountID === null || savedConfigRecord.AccountID === undefined);
@@ -338,14 +367,19 @@ export default function SaveConfigSection({
               )}
 
               {/* Exhibit Pages with header text */}
-              {exhibitPages.length > 0 && (
+              {effectiveComboPages.length > 0 && (
                 <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 4 }}>
                   <div style={{ background: '#fafafa', padding: '8px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <UnorderedListOutlined style={{ color: '#3465CD' }} />
-                    <strong style={{ fontSize: 13 }}>Exhibits ({exhibitPages.length})</strong>
+                    <strong style={{ fontSize: 13 }}>Exhibits ({effectiveComboPages.length})</strong>
+                    {configType === 'combo' && effectiveComboPages.length < exhibitPages.length && (
+                      <span style={{ fontSize: 11, color: '#ff4d4f', marginLeft: 'auto' }}>
+                        {exhibitPages.length - effectiveComboPages.length} suppressed
+                      </span>
+                    )}
                   </div>
                   <div style={{ padding: '8px 12px' }}>
-                    {exhibitPages.map((page, i) => {
+                    {effectiveComboPages.map((page, i) => {
                       const headers = exhibitHeaders[page.id] || ['Default'];
                       const selectedIdx = selectedHeaderMap[page.id] || 0;
                       const headerText = headers[selectedIdx] || headers[0] || 'Default';
@@ -365,8 +399,8 @@ export default function SaveConfigSection({
                 </div>
               )}
 
-              {/* Child config exhibits (combo only) */}
-              {childConfigExhibits.length > 0 && childConfigExhibits.map((child, idx) => (
+              {/* Child config exhibits (combo only) — filtered to remove suppressed pagesets */}
+              {effectiveChildConfigExhibits.length > 0 && effectiveChildConfigExhibits.map((child, idx) => (
                 <div key={idx} style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 8 }}>
                   <div style={{ background: '#fafafa', padding: '6px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                     <UnorderedListOutlined style={{ color: '#3465CD' }} />
