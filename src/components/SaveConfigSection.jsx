@@ -14,9 +14,98 @@ import {
   TeamOutlined,
   ExperimentOutlined,
   UnorderedListOutlined,
+  RightOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import { bulkTierOverrides, bulkPctThresholds, pagesets } from '../data/mockData';
 import { resolveExhibitPageSetIds } from '../data/dataResolvers';
+
+// Investments section that can collapse/expand — defaults to collapsed for stitched combo preview
+function CollapsibleInvestments({ investments, defaultExpanded = false }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  if (!investments || investments.length === 0) {
+    return (
+      <div style={{ padding: '8px 12px', fontSize: 12, color: '#8c8c8c' }}>
+        No investments assigned to this plan
+      </div>
+    );
+  }
+  return (
+    <div style={{ padding: '8px 12px' }}>
+      <div
+        onClick={() => setExpanded(e => !e)}
+        style={{ fontSize: 12, fontWeight: 600, color: '#00437B', marginBottom: expanded ? 4 : 0, cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        {expanded ? <DownOutlined style={{ fontSize: 10 }} /> : <RightOutlined style={{ fontSize: 10 }} />}
+        Investments ({investments.length})
+      </div>
+      {expanded && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+          {investments.slice(0, 30).map((inv, i) => (
+            <Tag key={inv.ct_investmentid || i} style={{ fontSize: 11, margin: 0 }}>{inv.Ref}</Tag>
+          ))}
+          {investments.length > 30 && (
+            <Tag style={{ fontSize: 11, margin: 0, color: '#8c8c8c' }}>+{investments.length - 30} more</Tag>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Fund changes section that can collapse/expand — defaults to collapsed
+function CollapsibleFundChanges({ fundChanges, defaultExpanded = false }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const inProgress = fundChanges?.inProgress || [];
+  const executed = fundChanges?.executed || [];
+  const total = inProgress.length + executed.length;
+  if (total === 0) return null;
+  return (
+    <div style={{ padding: '8px 12px', borderTop: '1px solid #f0f0f0' }}>
+      <div
+        onClick={() => setExpanded(e => !e)}
+        style={{ fontSize: 12, fontWeight: 600, color: '#fa8c16', marginBottom: expanded ? 4 : 0, cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        {expanded ? <DownOutlined style={{ fontSize: 10 }} /> : <RightOutlined style={{ fontSize: 10 }} />}
+        Fund Changes ({total})
+      </div>
+      {expanded && (
+        <div style={{ marginTop: 4 }}>
+          {inProgress.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#fa8c16', marginBottom: 2 }}>
+                In Progress ({inProgress.length})
+              </div>
+              {inProgress.map((fc, i) => (
+                <div key={fc.id || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span style={{ color: '#ff4d4f' }}>{fc.currentInvestment || fc.currentFund}</span>
+                  <span style={{ color: '#8c8c8c' }}>&rarr;</span>
+                  <span style={{ color: '#52c41a' }}>{fc.replacementInvestment || fc.replacementFund}</span>
+                  <span style={{ color: '#8c8c8c', fontSize: 10 }}>({fc.percentage}%)</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {executed.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#52c41a', marginBottom: 2 }}>
+                Past Year ({executed.length})
+              </div>
+              {executed.map((fc, i) => (
+                <div key={fc.id || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span style={{ color: '#ff4d4f' }}>{fc.currentInvestment || fc.currentFund}</span>
+                  <span style={{ color: '#8c8c8c' }}>&rarr;</span>
+                  <span style={{ color: '#52c41a' }}>{fc.replacementInvestment || fc.replacementFund}</span>
+                  <span style={{ color: '#8c8c8c', fontSize: 10 }}>({fc.percentage}%)</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Human-readable labels for changed fields
 function describeChange(field, oldVal, newVal, { templateLookup } = {}) {
@@ -146,13 +235,25 @@ export default function SaveConfigSection({
 
   const effectiveChildConfigExhibits = useMemo(() => {
     if (configType !== 'combo' || suppressedIds.size === 0) return childConfigExhibits;
-    return childConfigExhibits
-      .map(child => ({
-        ...child,
-        pages: child.pages.filter(p => !suppressedIds.has(p.id)),
-      }))
-      .filter(child => child.pages.length > 0);
+    // Apply suppression filter but keep every child in the list so users see all selected configs
+    return childConfigExhibits.map(child => ({
+      ...child,
+      pages: child.pages.filter(p => !suppressedIds.has(p.id)),
+    }));
   }, [childConfigExhibits, suppressedIds, configType]);
+
+  // For combo: split combo's own exhibit pages around the "COMBO Selected Report Configurations"
+  // marker (ps-83). Pages before the marker render before the stitched child content;
+  // pages after the marker render after. If the marker is missing, treat everything as "before".
+  const comboExhibitSplit = useMemo(() => {
+    if (configType !== 'combo') return { before: effectiveComboPages, after: [] };
+    const markerIdx = effectiveComboPages.findIndex(p => p.id === 'ps-83');
+    if (markerIdx === -1) return { before: effectiveComboPages, after: [] };
+    return {
+      before: effectiveComboPages.slice(0, markerIdx),
+      after: effectiveComboPages.slice(markerIdx + 1), // skip the marker itself — it's a placeholder, not content
+    };
+  }, [effectiveComboPages, configType]);
 
   // Detect if the active config is a CAPTRUST-wide shared config (AccountID === null)
   const isSharedConfig = savedConfigRecord && (savedConfigRecord.AccountID === null || savedConfigRecord.AccountID === undefined);
@@ -270,168 +371,162 @@ export default function SaveConfigSection({
                 )}
               </div>
 
-              {/* Per-plan breakdown */}
-              {reportPlans.map((plan, idx) => (
-                <div key={plan.ct_PlanID || idx} style={{ marginBottom: 16, border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden' }}>
-                  <div style={{ background: '#edf6fb', padding: '8px 12px', borderBottom: '1px solid #5FB4E5', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <strong>{plan.name || `Plan ${plan.ct_PlanID}`}</strong>
-                    {plan.type && <Tag style={{ fontSize: 10 }}>{plan.type}</Tag>}
-                    {plan._sourceConfigs && plan._sourceConfigs.length > 0 && (
-                      <span style={{ fontSize: 11, color: '#8c8c8c', marginLeft: 'auto' }}>
-                        via: {plan._sourceConfigs.join(', ')}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Investments */}
-                  {plan.investments && plan.investments.length > 0 ? (
-                    <div style={{ padding: '8px 12px' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#00437B', marginBottom: 4 }}>
-                        Investments ({plan.investments.length})
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {plan.investments.slice(0, 30).map((inv, i) => (
-                          <Tag key={inv.ct_investmentid || i} style={{ fontSize: 11, margin: 0 }}>{inv.Ref}</Tag>
-                        ))}
-                        {plan.investments.length > 30 && (
-                          <Tag style={{ fontSize: 11, margin: 0, color: '#8c8c8c' }}>+{plan.investments.length - 30} more</Tag>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ padding: '8px 12px', fontSize: 12, color: '#8c8c8c' }}>
-                      No investments assigned to this plan
-                    </div>
-                  )}
-
-                  {/* Fund Changes */}
-                  {plan.fundChanges && (plan.fundChanges.inProgress?.length > 0 || plan.fundChanges.executed?.length > 0) && (
-                    <div style={{ padding: '8px 12px', borderTop: '1px solid #f0f0f0' }}>
-                      {plan.fundChanges.inProgress?.length > 0 && (
-                        <div style={{ marginBottom: 6 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: '#fa8c16', marginBottom: 4 }}>
-                            Fund Changes — In Progress ({plan.fundChanges.inProgress.length})
-                          </div>
-                          {plan.fundChanges.inProgress.map((fc, i) => (
-                            <div key={fc.id || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
-                              <span style={{ color: '#ff4d4f' }}>{fc.currentInvestment || fc.currentFund}</span>
-                              <span style={{ color: '#8c8c8c' }}>→</span>
-                              <span style={{ color: '#52c41a' }}>{fc.replacementInvestment || fc.replacementFund}</span>
-                              <span style={{ color: '#8c8c8c', fontSize: 10 }}>({fc.percentage}%)</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {plan.fundChanges.executed?.length > 0 && (
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: '#52c41a', marginBottom: 4 }}>
-                            Fund Changes — Past Year ({plan.fundChanges.executed.length})
-                          </div>
-                          {plan.fundChanges.executed.map((fc, i) => (
-                            <div key={fc.id || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
-                              <span style={{ color: '#ff4d4f' }}>{fc.currentInvestment || fc.currentFund}</span>
-                              <span style={{ color: '#8c8c8c' }}>→</span>
-                              <span style={{ color: '#52c41a' }}>{fc.replacementInvestment || fc.replacementFund}</span>
-                              <span style={{ color: '#8c8c8c', fontSize: 10 }}>({fc.percentage}%)</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Candidates */}
-                  {plan.candidates && plan.candidates.length > 0 && (
-                    <div style={{ padding: '8px 12px', borderTop: '1px solid #f0f0f0' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#d48806', marginBottom: 4 }}>
-                        <ExperimentOutlined style={{ marginRight: 4 }} />
-                        Candidate Investments ({plan.candidates.length})
-                      </div>
-                      {plan.candidates.map((cand, i) => (
-                        <div key={cand.ct_investmentid || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <Tag color="orange" style={{ fontSize: 10, margin: 0 }}>{cand.Ref}</Tag>
-                          {cand.replacesRef && (
-                            <span style={{ color: '#8c8c8c' }}>vs <strong>{cand.replacesRef}</strong></span>
+              {(() => {
+                // Per-plan breakdown block
+                const perPlanBlock = (
+                  <>
+                    {reportPlans.map((plan, idx) => (
+                      <div key={plan.ct_PlanID || idx} style={{ marginBottom: 12, border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden' }}>
+                        <div style={{ background: '#edf6fb', padding: '8px 12px', borderBottom: '1px solid #5FB4E5', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <strong>{plan.name || `Plan ${plan.ct_PlanID}`}</strong>
+                          {plan.type && <Tag style={{ fontSize: 10 }}>{plan.type}</Tag>}
+                          {plan._sourceConfigs && plan._sourceConfigs.length > 0 && (
+                            <span style={{ fontSize: 11, color: '#8c8c8c', marginLeft: 'auto' }}>
+                              via: {plan._sourceConfigs.join(', ')}
+                            </span>
                           )}
                         </div>
-                      ))}
+                        <CollapsibleInvestments investments={plan.investments} defaultExpanded={false} />
+                        <CollapsibleFundChanges fundChanges={plan.fundChanges} defaultExpanded={false} />
+                        {plan.candidates && plan.candidates.length > 0 && (
+                          <div style={{ padding: '8px 12px', borderTop: '1px solid #f0f0f0' }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: '#d48806', marginBottom: 4 }}>
+                              <ExperimentOutlined style={{ marginRight: 4 }} />
+                              Candidate Investments ({plan.candidates.length})
+                            </div>
+                            {plan.candidates.map((cand, i) => (
+                              <div key={cand.ct_investmentid || i} style={{ fontSize: 11, padding: '2px 0', display: 'flex', gap: 6, alignItems: 'center' }}>
+                                <Tag color="orange" style={{ fontSize: 10, margin: 0 }}>{cand.Ref}</Tag>
+                                {cand.replacesRef && (
+                                  <span style={{ color: '#8c8c8c' }}>vs <strong>{cand.replacesRef}</strong></span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {reportPlans.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: 20, color: '#8c8c8c', fontSize: 13 }}>
+                        No plans configured for this report.
+                      </div>
+                    )}
+                  </>
+                );
+
+                // Helper: render a list of combo exhibit pages (respects header text + suppression count)
+                const renderComboPages = (pages, label, suppressedCount) => pages.length === 0 ? null : (
+                  <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 4 }}>
+                    <div style={{ background: '#fafafa', padding: '8px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <UnorderedListOutlined style={{ color: '#3465CD' }} />
+                      <strong style={{ fontSize: 13 }}>{label} ({pages.length})</strong>
+                      {suppressedCount > 0 && (
+                        <span style={{ fontSize: 11, color: '#ff4d4f', marginLeft: 'auto' }}>
+                          {suppressedCount} suppressed
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))}
-
-              {reportPlans.length === 0 && (
-                <div style={{ textAlign: 'center', padding: 20, color: '#8c8c8c', fontSize: 13 }}>
-                  No plans configured for this report.
-                </div>
-              )}
-
-              {/* Exhibit Pages with header text */}
-              {effectiveComboPages.length > 0 && (
-                <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 4 }}>
-                  <div style={{ background: '#fafafa', padding: '8px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <UnorderedListOutlined style={{ color: '#3465CD' }} />
-                    <strong style={{ fontSize: 13 }}>Exhibits ({effectiveComboPages.length})</strong>
-                    {configType === 'combo' && effectiveComboPages.length < exhibitPages.length && (
-                      <span style={{ fontSize: 11, color: '#ff4d4f', marginLeft: 'auto' }}>
-                        {exhibitPages.length - effectiveComboPages.length} suppressed
-                      </span>
-                    )}
+                    <div style={{ padding: '8px 12px' }}>
+                      {pages.map((page, i) => {
+                        const headers = exhibitHeaders[page.id] || ['Default'];
+                        const selectedIdx = selectedHeaderMap[page.id] || 0;
+                        const headerText = headers[selectedIdx] || headers[0] || 'Default';
+                        const isCustom = headerText !== 'Default';
+                        return (
+                          <div key={page.id || i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', fontSize: 12 }}>
+                            <Tag color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0, minWidth: 0 }}>
+                              {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                            </Tag>
+                            <span style={{ color: isCustom ? '#3465CD' : '#8c8c8c', fontSize: 11 }}>
+                              &mdash; {headerText}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div style={{ padding: '8px 12px' }}>
-                    {effectiveComboPages.map((page, i) => {
-                      const headers = exhibitHeaders[page.id] || ['Default'];
-                      const selectedIdx = selectedHeaderMap[page.id] || 0;
-                      const headerText = headers[selectedIdx] || headers[0] || 'Default';
-                      const isCustom = headerText !== 'Default';
-                      return (
-                        <div key={page.id || i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', fontSize: 12 }}>
-                          <Tag color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0, minWidth: 0 }}>
-                            {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
-                          </Tag>
-                          <span style={{ color: isCustom ? '#3465CD' : '#8c8c8c', fontSize: 11 }}>
-                            — {headerText}
-                          </span>
+                );
+
+                // Child config exhibits block (combo only)
+                const childExhibitsBlock = (
+                  <>
+                    {effectiveChildConfigExhibits.map((child, idx) => (
+                      <div key={idx} style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 8 }}>
+                        <div style={{ background: '#fafafa', padding: '6px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                          <UnorderedListOutlined style={{ color: '#3465CD' }} />
+                          <strong>{child.configName}</strong>
+                          {child.templateName && (
+                            <span style={{ color: '#8c8c8c' }}>
+                              &mdash; {child.templateName}
+                              {child.isShared && <Tag color="purple" style={{ fontSize: 10, marginLeft: 4 }}>Shared</Tag>}
+                            </span>
+                          )}
+                          <Tag style={{ marginLeft: 'auto', fontSize: 10 }}>{child.pages.length} pages</Tag>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Child config exhibits (combo only) — filtered to remove suppressed pagesets */}
-              {effectiveChildConfigExhibits.length > 0 && effectiveChildConfigExhibits.map((child, idx) => (
-                <div key={idx} style={{ border: '1px solid #d9d9d9', borderRadius: 6, overflow: 'hidden', marginTop: 8 }}>
-                  <div style={{ background: '#fafafa', padding: '6px 12px', borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                    <UnorderedListOutlined style={{ color: '#3465CD' }} />
-                    <strong>{child.configName}</strong>
-                    {child.templateName && (
-                      <span style={{ color: '#8c8c8c' }}>
-                        — {child.templateName}
-                        {child.isShared && <Tag color="purple" style={{ fontSize: 10, marginLeft: 4 }}>Shared</Tag>}
-                      </span>
-                    )}
-                    <Tag style={{ marginLeft: 'auto', fontSize: 10 }}>{child.pages.length} pages</Tag>
-                  </div>
-                  <div style={{ padding: '6px 12px' }}>
-                    {child.pages.map((page, i) => {
-                      const headers = exhibitHeaders[page.id] || ['Default'];
-                      const headerText = headers[0] || 'Default';
-                      const isCustom = headerText !== 'Default';
-                      return (
-                        <div key={page.id || i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', fontSize: 12 }}>
-                          <Tag color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
-                            {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
-                          </Tag>
-                          <span style={{ color: isCustom ? '#3465CD' : '#8c8c8c', fontSize: 11 }}>
-                            — {headerText}
-                          </span>
+                        <div style={{ padding: '6px 12px' }}>
+                          {child.pages.length === 0 ? (
+                            <div style={{ fontSize: 12, color: '#8c8c8c', fontStyle: 'italic' }}>
+                              {child.templateName
+                                ? 'All exhibits in this template are suppressed at the combo level.'
+                                : 'No exhibit template assigned to this report configuration.'}
+                            </div>
+                          ) : child.pages.map((page, i) => {
+                            const headers = exhibitHeaders[page.id] || ['Default'];
+                            const headerText = headers[0] || 'Default';
+                            const isCustom = headerText !== 'Default';
+                            return (
+                              <div key={page.id || i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', fontSize: 12 }}>
+                                <Tag color={page.isTab ? 'blue' : undefined} style={{ fontSize: 11, margin: 0 }}>
+                                  {page.isTab ? 'TAB ' : ''}{page.name.replace(/^TAB - /, '')}
+                                </Tag>
+                                <span style={{ color: isCustom ? '#3465CD' : '#8c8c8c', fontSize: 11 }}>
+                                  &mdash; {headerText}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+                      </div>
+                    ))}
+                  </>
+                );
+
+                // For combo: render in template order using ps-83 marker to split combo exhibits
+                if (configType === 'combo') {
+                  const totalSuppressed = exhibitPages.length - effectiveComboPages.length;
+                  const splitSuppressedBefore = totalSuppressed > 0 ? Math.min(totalSuppressed, exhibitPages.findIndex(p => p.id === 'ps-83')) : 0;
+                  const suppressedBefore = splitSuppressedBefore >= 0 ? splitSuppressedBefore : totalSuppressed;
+                  const suppressedAfter = Math.max(0, totalSuppressed - suppressedBefore);
+                  return (
+                    <>
+                      {renderComboPages(comboExhibitSplit.before, 'Combo Exhibits (Before Stitch)', suppressedBefore)}
+
+                      <div style={{ marginTop: 16, marginBottom: 8, padding: '6px 12px', background: '#f0f5ff', border: '1px solid #adc6ff', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <UnorderedListOutlined style={{ color: '#3465CD' }} />
+                        <strong style={{ fontSize: 13, color: '#1D39C4' }}>Stitched Report Configurations</strong>
+                        <span style={{ fontSize: 11, color: '#595959' }}>
+                          {comboExhibitSplit.after.length === 0 && exhibitPages.findIndex(p => p.id === 'ps-83') === -1
+                            ? '(No marker set — appearing at default position)'
+                            : '(Position set by COMBO Selected Report Configurations marker)'}
+                        </span>
+                      </div>
+
+                      {perPlanBlock}
+                      {childExhibitsBlock}
+
+                      {renderComboPages(comboExhibitSplit.after, 'Combo Exhibits (After Stitch)', suppressedAfter)}
+                    </>
+                  );
+                }
+
+                // Non-combo: previous order (per-plan, then combo exhibits)
+                return (
+                  <>
+                    {perPlanBlock}
+                    {renderComboPages(effectiveComboPages, 'Exhibits', 0)}
+                  </>
+                );
+              })()}
             </div>
           ),
         });

@@ -265,10 +265,17 @@ function App() {
   const handleSaveTemplate = (template) => {
     setAllTemplates(prev => [...prev, template]);
   };
-  const handleUpdateTemplate = (templateId, newExhibitIds) => {
+  const handleUpdateTemplate = (templateId, newExhibitIds, suppressMap) => {
     setAllTemplates(prev => prev.map(t =>
       t.ExhibitTemplateID === templateId
-        ? { ...t, _sessionIds: [...newExhibitIds], LastSaved: new Date().toISOString(), LastSavedBy: 'You' }
+        ? {
+            ...t,
+            _sessionIds: [...newExhibitIds],
+            LastSaved: new Date().toISOString(),
+            LastSavedBy: 'You',
+            // Only write comboSuppressMap when it's provided (combo templates)
+            ...(suppressMap !== undefined ? { _comboSuppressMap: { ...suppressMap } } : {}),
+          }
         : t
     ));
   };
@@ -422,7 +429,9 @@ function App() {
         _selectedConfigIDs: config._selectedConfigIDs || null,
         _aggregateFactSheets: config._aggregateFactSheets || false,
         _replaceSpotlights: config._replaceSpotlights || false,
-        _comboSuppressMap: config._comboSuppressMap || {},
+        _comboSuppressMap: (config._comboSuppressMap && Object.keys(config._comboSuppressMap).length > 0)
+          ? config._comboSuppressMap
+          : ((getTemplate(config.ExhibitTemplateID)?._comboSuppressMap) || {}),
         _key: Date.now(),
       });
       setLoadCounter(prev => prev + 1);
@@ -451,7 +460,9 @@ function App() {
         _selectedConfigIDs: config._selectedConfigIDs || null,
         _aggregateFactSheets: config._aggregateFactSheets || false,
         _replaceSpotlights: config._replaceSpotlights || false,
-        _comboSuppressMap: config._comboSuppressMap || {},
+        _comboSuppressMap: (config._comboSuppressMap && Object.keys(config._comboSuppressMap).length > 0)
+          ? config._comboSuppressMap
+          : ((getTemplate(config.ExhibitTemplateID)?._comboSuppressMap) || {}),
         _key: Date.now(),
       });
       setLoadCounter(prev => prev + 1);
@@ -818,7 +829,10 @@ function App() {
         _selectedConfigIDs: autoConfig._selectedConfigIDs || null,
         _aggregateFactSheets: autoConfig._aggregateFactSheets || false,
         _replaceSpotlights: autoConfig._replaceSpotlights || false,
-        _comboSuppressMap: autoConfig._comboSuppressMap || {},
+        // Suppress map: prefer config's, fall back to template's (saved via Save Template)
+        _comboSuppressMap: (autoConfig._comboSuppressMap && Object.keys(autoConfig._comboSuppressMap).length > 0)
+          ? autoConfig._comboSuppressMap
+          : ((getTemplate(autoConfig.ExhibitTemplateID)?._comboSuppressMap) || {}),
         _autoLoad: true,
         _key: Date.now(),
       });
@@ -848,7 +862,7 @@ function App() {
           <span className="demo-label">Demo Mode</span>
           <span>Interactive Mockup</span>
         </Space>
-        <span style={{ opacity: 0.7 }}>v1.10.1</span>
+        <span style={{ opacity: 0.7 }}>v1.11.0</span>
       </div>
 
       {/* App Header with Logo */}

@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.0] — 2026-04-17
+
+### Combo Run Now: Template-Order Preview, Collapsible Sections, Persistence
+
+**Template-order ad hoc preview (Combo only)**
+- Run Now preview for combos now renders in exhibit-template order
+- The COMBO Selected Report Configurations pageset (ps-83) acts as a stitch marker:
+  combo pages before the marker render first, then stitched child config content,
+  then combo pages after the marker
+- Labeled sections: "Combo Exhibits (Before Stitch)" / "Stitched Report Configurations" / "Combo Exhibits (After Stitch)"
+- If ps-83 is not placed in the template, a note indicates default position
+
+**Collapsible plan sections**
+- Per-plan "Investments (N)" header is now collapsible, defaults to collapsed
+- Per-plan "Fund Changes (N)" header is now collapsible, defaults to collapsed
+- Click the header to expand/collapse; applies to single, consolidated, and combo stitched content
+
+**Suppress-map persistence fix**
+- Fixed issue where combo suppress settings were lost after reload when the user
+  saved only the exhibit template (not the report config)
+- `_comboSuppressMap` now saved on the ExhibitTemplate record as well, so the
+  settings travel with the template
+- Load paths fall back to the template's suppress map when the config's is empty
+
+**Visibility fix**
+- Child configs with no exhibit template or with all exhibits suppressed now
+  appear in the combo preview with a placeholder message (previously silently dropped)
+
+---
+
 ## [1.10.1] — 2026-04-17
 
 - New pageset: ps-84 "COMBO Topical Spotlight" (category 4)

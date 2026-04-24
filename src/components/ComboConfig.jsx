@@ -181,7 +181,9 @@ export default function ComboConfig({
     });
   }, [selectedConfigs, allPlans, allInvestments, allPlanGroups]);
 
-  // Resolve exhibit pages from each child config's exhibit template
+  // Resolve exhibit pages from each child config's exhibit template.
+  // Keep every selected child in the list (even when it has no exhibits) so
+  // users can see which configs have no exhibit template assigned.
   const childConfigExhibits = useMemo(() => {
     return selectedConfigs.map(config => {
       const template = config.ExhibitTemplateID
@@ -197,7 +199,7 @@ export default function ComboConfig({
         isShared: template && (template.AccountID === null || template.AccountID === undefined),
         pages,
       };
-    }).filter(c => c.pages.length > 0);
+    });
   }, [selectedConfigs, allTemplates]);
 
   // Filtered available configs (primary only toggle)

@@ -150,6 +150,10 @@ export default function ExhibitMenuSection({
     }
     setExhibitTemplateName(template.Name);
     if (setExhibitTemplateId) setExhibitTemplateId(template.ExhibitTemplateID);
+    // Restore combo suppress settings saved with the template (combo only)
+    if (configType === 'combo' && setComboSuppressMap) {
+      setComboSuppressMap(template._comboSuppressMap ? { ...template._comboSuppressMap } : {});
+    }
     message.success(`Loaded template: ${template.Name}`);
     setTemplateModalOpen(false);
   };
@@ -181,6 +185,8 @@ export default function ExhibitMenuSection({
       LastSaved: new Date().toISOString(),
       AccountID: saveAsShared ? null : (clientAccountId || null),
       _sessionIds: [...selectedExhibitIds],
+      // Preserve combo suppress settings on the template so they travel with it
+      _comboSuppressMap: configType === 'combo' ? { ...comboSuppressMap } : undefined,
     };
     if (onSaveTemplate) {
       onSaveTemplate(newTemplate);
@@ -238,7 +244,8 @@ export default function ExhibitMenuSection({
 
   const doUpdateTemplate = (templateId) => {
     if (onUpdateTemplate) {
-      onUpdateTemplate(templateId, selectedExhibitIds);
+      // Pass combo suppress map so it's saved on the template record
+      onUpdateTemplate(templateId, selectedExhibitIds, configType === 'combo' ? comboSuppressMap : undefined);
     }
     message.success(`Updated template: ${exhibitTemplateName}`);
   };
